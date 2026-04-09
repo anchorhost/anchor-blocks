@@ -5,7 +5,7 @@
  * Version: 1.2.0
  * Author: Austin Ginder
  * Author URI: https://anchor.host
- * License: GPL2
+ * License: MIT
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;

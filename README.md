@@ -28,4 +28,4 @@ The plugin checks for updates from this repository automatically. When a new ver
 
 ## License
 
-GPL-2.0
+MIT
