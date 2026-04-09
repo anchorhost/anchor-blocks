@@ -237,7 +237,7 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 }
 
 @media (max-width: 640px) {
-	.wp-block-anchor-stats-dashboard {
+	body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 		grid-template-columns: repeat(2, 1fr);
 	}
 }
