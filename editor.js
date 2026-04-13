@@ -507,7 +507,7 @@
 				)
 			);
 		},
-		save: function() { return null; }
+		save: function() { return el( InnerBlocks.Content ); }
 	} );
 
 } )( window.wp.blocks, window.wp.element, window.wp.blockEditor, window.wp.components );
