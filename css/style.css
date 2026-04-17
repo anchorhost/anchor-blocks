@@ -261,7 +261,7 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 }
 
 .wp-block-anchor-stat-card .ab-stat-value {
-	font-size: 2.4rem;
+	font-size: 2rem;
 	font-weight: 800;
 	letter-spacing: -0.03em;
 	line-height: 1;
