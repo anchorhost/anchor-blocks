@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0 — 2026-06-14
+
+- Indicators of Compromise block (`ioc-list` / `ioc-row`) with colored type pills, monospace values, notes, and an email-safe table rebuild
+- Fix Stats Dashboard grid layout inside the block editor iframe
+
 ## 1.2.0 — 2026-04-09
 
 - Self-hosted updater for wordpress.org takeover protection
