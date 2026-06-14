@@ -510,4 +510,105 @@
 		save: function() { return el( InnerBlocks.Content ); }
 	} );
 
+	/* =====================================================================
+	   IOC LIST — Parent block (server-rendered children)
+	   ===================================================================== */
+
+	blocks.registerBlockType( 'anchor/ioc-list', {
+		apiVersion: 3,
+		title: 'Indicators of Compromise',
+		icon: 'shield-alt',
+		category: 'text',
+		description: 'A scannable list of indicators — domains, IPs, file hashes, and paths.',
+		attributes: {
+			title: { type: 'string', default: 'Indicators of Compromise' }
+		},
+		edit: function( props ) {
+			const blockProps = useBlockProps( { className: 'wp-block-anchor-ioc-list' } );
+			return el( 'div', blockProps,
+				el( InspectorControls, null,
+					el( PanelBody, { title: 'Settings' },
+						el( TextControl, {
+							label: 'List title',
+							value: props.attributes.title,
+							onChange: function( val ) { props.setAttributes( { title: val } ); }
+						} )
+					)
+				),
+				props.attributes.title ? el( 'div', { className: 'ab-ioc-title' }, props.attributes.title ) : null,
+				el( InnerBlocks, {
+					allowedBlocks: [ 'anchor/ioc-row' ],
+					template: [
+						[ 'anchor/ioc-row', { label: 'Domain', color: 'red' } ]
+					]
+				} )
+			);
+		},
+		save: function() { return el( InnerBlocks.Content ); }
+	} );
+
+	/* =====================================================================
+	   IOC ROW — Child block (server-rendered)
+	   ===================================================================== */
+
+	blocks.registerBlockType( 'anchor/ioc-row', {
+		apiVersion: 3,
+		title: 'Indicator',
+		icon: 'warning',
+		category: 'text',
+		parent: [ 'anchor/ioc-list' ],
+		attributes: {
+			label: { type: 'string', default: 'Domain' },
+			color: { type: 'string', default: 'red' },
+			value: { type: 'string', default: '' },
+			note:  { type: 'string', default: '' }
+		},
+		edit: function( props ) {
+			const { label, color, value, note } = props.attributes;
+			const blockProps = useBlockProps( { className: 'wp-block-anchor-ioc-row' } );
+
+			return el( 'div', blockProps,
+				el( InspectorControls, null,
+					el( PanelBody, { title: 'Indicator Settings' },
+						el( TextControl, {
+							label: 'Type label',
+							value: label,
+							onChange: function( val ) { props.setAttributes( { label: val } ); }
+						} ),
+						el( SelectControl, {
+							label: 'Type color',
+							value: color,
+							options: [
+								{ label: 'Red', value: 'red' },
+								{ label: 'Orange', value: 'orange' },
+								{ label: 'Blue', value: 'blue' },
+								{ label: 'Green', value: 'green' },
+								{ label: 'Purple', value: 'purple' },
+								{ label: 'Gray', value: 'gray' }
+							],
+							onChange: function( val ) { props.setAttributes( { color: val } ); }
+						} )
+					)
+				),
+				el( 'span', { className: 'ab-ioc-type is-color-' + color }, label ),
+				el( RichText, {
+					tagName: 'code',
+					className: 'ab-ioc-value',
+					value: value,
+					onChange: function( val ) { props.setAttributes( { value: val } ); },
+					placeholder: 'siteguarding.com',
+					allowedFormats: []
+				} ),
+				el( RichText, {
+					tagName: 'span',
+					className: 'ab-ioc-note',
+					value: note,
+					onChange: function( val ) { props.setAttributes( { note: val } ); },
+					placeholder: 'What it is...'
+				} )
+			);
+		},
+		save: function() { return null; }
+	} );
+
 } )( window.wp.blocks, window.wp.element, window.wp.blockEditor, window.wp.components );

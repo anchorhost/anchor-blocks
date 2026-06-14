@@ -203,17 +203,28 @@
 	margin: 1.5rem 0;
 	width: 100%;
 	max-width: 100%;
+	/* The editor canvas is an iframe whose <body> has no .wp-admin class, so the
+	   frontend `body:not(.wp-admin)` grid rule leaks in and lands on this wrapper
+	   (whose only child is .block-editor-inner-blocks). Force it off here; the
+	   real grid belongs on the inner layout below. */
+	display: block !important;
 }
 
-.wp-block-anchor-stats-dashboard > .block-editor-inner-blocks {
-	width: 100%;
-}
-
-.wp-block-anchor-stats-dashboard > .block-editor-inner-blocks > .block-editor-block-list__layout {
+/* Real grid lives on the inner block-list layout (the element whose direct
+   children are the stat cards). Matched as a descendant so it works whether or
+   not an intermediate .block-editor-inner-blocks wrapper is present. */
+.wp-block-anchor-stats-dashboard .block-editor-block-list__layout {
 	display: grid !important;
 	grid-template-columns: repeat(4, 1fr) !important;
 	gap: 0.85rem !important;
 	width: 100%;
+	align-items: stretch;
+}
+
+/* Keep the inserter appender on its own full-width row so it never steals a
+   column and squeezes the cards. */
+.wp-block-anchor-stats-dashboard .block-editor-block-list__layout > .block-list-appender {
+	grid-column: 1 / -1;
 }
 
 /* ── Stat Card (in editor) ── */
@@ -229,6 +240,8 @@
 	box-shadow: 0 4px 12px rgba(26,39,68,0.08), 0 1px 3px rgba(26,39,68,0.06);
 	max-width: 100% !important;
 	width: 100%;
+	min-width: 0;
+	margin: 0 !important;
 }
 
 .wp-block-anchor-stat-card .ab-stat-value {
@@ -272,7 +285,7 @@
 	margin-bottom: 1rem;
 }
 
-.wp-block-anchor-bar-chart > .block-editor-inner-blocks > .block-editor-block-list__layout {
+.wp-block-anchor-bar-chart .block-editor-block-list__layout {
 	display: flex;
 	flex-direction: column;
 	gap: 0.5rem;
@@ -382,4 +395,38 @@
 
 .wp-block-anchor-report-card .ab-rc-body [contenteditable] {
 	min-height: 1.5em;
+}
+
+/* Mirror the frontend: code blocks scroll horizontally inside a report card. */
+.wp-block-anchor-report-card .ab-rc-body .wp-block-code,
+.wp-block-anchor-report-card .ab-rc-body pre {
+	max-width: 100%;
+	overflow-x: auto;
+	box-sizing: border-box;
+	margin: 0.5rem 0;
+}
+
+.wp-block-anchor-report-card .ab-rc-body .wp-block-code code,
+.wp-block-anchor-report-card .ab-rc-body pre code {
+	background: transparent;
+	padding: 0;
+	border-radius: 0;
+	font-size: 0.85em;
+	white-space: pre;
+}
+
+/* IOC row — keep RichText fields clickable while empty in the editor */
+.wp-block-anchor-ioc-row .ab-ioc-value {
+	min-width: 8rem;
+	display: inline-block;
+}
+
+.wp-block-anchor-ioc-row .ab-ioc-note {
+	min-width: 6rem;
+}
+
+.wp-block-anchor-ioc-row .ab-ioc-value:empty::before,
+.wp-block-anchor-ioc-row .ab-ioc-note:empty::before {
+	content: attr(data-rich-text-placeholder);
+	opacity: 0.5;
 }

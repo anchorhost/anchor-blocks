@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Anchor Blocks
- * Description: Custom blocks for Anchor Hosting blog posts — Conversation, Timeline, Callout, Stats Dashboard, Bar Chart, and Report Card.
- * Version: 1.2.0
+ * Description: Custom blocks for Anchor Hosting blog posts — Conversation, Timeline, Callout, Stats Dashboard, Bar Chart, Report Card, and Indicators of Compromise.
+ * Version: 1.3.0
  * Author: Austin Ginder
  * Author URI: https://anchor.host
  * License: MIT
@@ -10,7 +10,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'ANCHOR_BLOCKS_VERSION', '1.2.0' );
+define( 'ANCHOR_BLOCKS_VERSION', '1.3.0' );
 define( 'ANCHOR_BLOCKS_URL', plugin_dir_url( __FILE__ ) );
 define( 'ANCHOR_BLOCKS_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -64,6 +64,13 @@ add_action( 'init', function() {
 		],
 	] ) );
 
+	register_block_type( 'anchor/ioc-list', array_merge( $block_args, [
+		'render_callback' => 'anchor_blocks_render_ioc_list',
+		'attributes'      => [
+			'title' => [ 'type' => 'string', 'default' => 'Indicators of Compromise' ],
+		],
+	] ) );
+
 	// Child/leaf blocks — server-side rendered to avoid validation errors
 	register_block_type( 'anchor/conversation-message', array_merge( $block_args, [
 		'render_callback' => 'anchor_blocks_render_conversation_message',
@@ -110,6 +117,17 @@ add_action( 'init', function() {
 			'value'   => [ 'type' => 'string', 'default' => '0' ],
 			'percent' => [ 'type' => 'number', 'default' => 50 ],
 			'color'   => [ 'type' => 'string', 'default' => 'blue' ],
+		],
+	] ) );
+
+	// IOC List — child row (server-rendered)
+	register_block_type( 'anchor/ioc-row', array_merge( $block_args, [
+		'render_callback' => 'anchor_blocks_render_ioc_row',
+		'attributes'      => [
+			'label' => [ 'type' => 'string', 'default' => 'Domain' ],
+			'color' => [ 'type' => 'string', 'default' => 'red' ],
+			'value' => [ 'type' => 'string', 'default' => '' ],
+			'note'  => [ 'type' => 'string', 'default' => '' ],
 		],
 	] ) );
 
@@ -365,6 +383,57 @@ function anchor_blocks_inline_email_styles( $args ) {
 		'ab-stat-label" style="font-size:0.78rem;color:#6b7f94;font-weight:500"'
 	, $html );
 
+	// Rebuild IOC lists as email-safe tables
+	$ioc_colors = [
+		'red'    => '#dc2626',
+		'orange' => '#d97706',
+		'blue'   => '#2b8fc7',
+		'green'  => '#16a34a',
+		'purple' => '#8b5cf6',
+		'gray'   => '#6b7280',
+	];
+	$html = preg_replace_callback(
+		'/<div[^>]*wp-block-anchor-ioc-list"[^>]*>([\s\S]*?)\n<\/div>\n/s',
+		function( $list ) use ( $ioc_colors ) {
+			$inner = $list[1];
+
+			$title_html = '';
+			if ( preg_match( '/<div[^>]*ab-ioc-title[^>]*>(.*?)<\/div>/s', $inner, $t ) ) {
+				$title_html = '<tr><td colspan="2" style="padding:0 0 12px 0;font-size:0.85rem;font-weight:650">' . $t[1] . '</td></tr>';
+			}
+
+			$rows = '';
+			preg_match_all(
+				'/<div[^>]*wp-block-anchor-ioc-row"[^>]*>\s*<span[^>]*is-color-(\w+)"[^>]*>(.*?)<\/span>\s*<code[^>]*ab-ioc-value"[^>]*>(.*?)<\/code>\s*(?:<span[^>]*ab-ioc-note"[^>]*>(.*?)<\/span>)?\s*<\/div>/s',
+				$inner, $items, PREG_SET_ORDER
+			);
+
+			foreach ( $items as $m ) {
+				$hex   = $ioc_colors[ $m[1] ] ?? '#dc2626';
+				$label = $m[2];
+				$value = $m[3];
+				$note  = $m[4] ?? '';
+
+				$note_html = $note
+					? '<div style="font-size:0.8rem;color:#6b7f94;margin-top:2px">' . $note . '</div>'
+					: '';
+
+				$rows .= '<tr>'
+					. '<td style="padding:6px 12px 6px 0;vertical-align:top;white-space:nowrap">'
+					. '<span style="display:inline-block;padding:2px 8px;border-radius:6px;font-size:0.68rem;font-weight:700;font-family:\'SF Mono\',monospace;text-transform:uppercase;letter-spacing:0.03em;color:#fff;background:' . $hex . '">' . $label . '</span>'
+					. '</td>'
+					. '<td style="padding:6px 0;vertical-align:top;width:100%;border-bottom:1px solid #eef2f7">'
+					. '<code style="font-family:\'SF Mono\',monospace;font-size:0.82rem;color:#1a2744;background:#f5f8fb;padding:2px 7px;border-radius:5px;word-break:break-all">' . $value . '</code>'
+					. $note_html
+					. '</td></tr>';
+			}
+
+			return '<table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;margin:1.5rem 0">'
+				. $title_html . $rows . '</table>' . "\n";
+		},
+		$html
+	);
+
 	$args['message'] = $html;
 	return $args;
 }
@@ -418,6 +487,30 @@ function anchor_blocks_render_bar_chart( $attrs, $content ) {
 	return sprintf(
 		'<div class="wp-block-anchor-bar-chart">%s%s</div>',
 		$title_html, $content
+	);
+}
+
+function anchor_blocks_render_ioc_list( $attrs, $content ) {
+	$title = esc_html( $attrs['title'] ?? '' );
+	$title_html = $title ? sprintf( '<div class="ab-ioc-title">%s</div>', $title ) : '';
+
+	return sprintf(
+		'<div class="wp-block-anchor-ioc-list">%s%s</div>',
+		$title_html, $content
+	);
+}
+
+function anchor_blocks_render_ioc_row( $attrs ) {
+	$label = esc_html( $attrs['label'] ?? 'Domain' );
+	$color = esc_attr( $attrs['color'] ?? 'red' );
+	$value = esc_html( $attrs['value'] ?? '' );
+	$note  = wp_kses_post( $attrs['note'] ?? '' );
+
+	$note_html = $note ? sprintf( '<span class="ab-ioc-note">%s</span>', $note ) : '';
+
+	return sprintf(
+		'<div class="wp-block-anchor-ioc-row"><span class="ab-ioc-type is-color-%s">%s</span><code class="ab-ioc-value">%s</code>%s</div>',
+		$color, $label, $value, $note_html
 	);
 }
 

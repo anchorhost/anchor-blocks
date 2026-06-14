@@ -10,6 +10,7 @@ Custom Gutenberg blocks for [Anchor Hosting](https://anchor.host) blog posts.
 - **Stats Dashboard** — Grid of stat cards with colored values
 - **Bar Chart** — Horizontal bar chart with labels and percentages
 - **Report Card** — Tagged card with header and inner block content
+- **Indicators of Compromise** — Scannable list of IOCs (domains, IPs, file hashes, paths) with colored type pills
 
 All blocks are server-side rendered to avoid block validation errors across updates. Email-safe inline styles are automatically applied when blocks appear in outgoing `wp_mail` messages.
 
