@@ -370,6 +370,7 @@
 .ab-rc-tag.is-color-red    { background: #dc2626; }
 .ab-rc-tag.is-color-purple { background: #8b5cf6; }
 .ab-rc-tag.is-color-orange { background: #d97706; }
+.ab-rc-tag.is-color-gray   { background: #6b7280; }
 
 .wp-block-anchor-report-card .ab-rc-title {
 	font-size: 0.95rem;
@@ -427,6 +428,139 @@
 
 .wp-block-anchor-ioc-row .ab-ioc-value:empty::before,
 .wp-block-anchor-ioc-row .ab-ioc-note:empty::before {
+	content: attr(data-rich-text-placeholder);
+	opacity: 0.5;
+}
+
+/* ── Vector Cards (in editor) ── */
+
+.wp-block-anchor-vector-cards {
+	margin: 1.5rem 0;
+	width: 100%;
+	max-width: 100%;
+	/* Same iframe leak as Stats Dashboard: the frontend `body:not(.wp-admin)`
+	   grid rule lands on this wrapper. Force it off; the real grid belongs on
+	   the inner block-list layout below. */
+	display: block !important;
+}
+
+.wp-block-anchor-vector-cards .ab-vc-heading {
+	font-size: 0.85rem;
+	font-weight: 650;
+	margin-bottom: 1rem;
+}
+
+.wp-block-anchor-vector-cards .block-editor-block-list__layout {
+	display: grid !important;
+	grid-template-columns: repeat(2, 1fr) !important;
+	gap: 0.85rem !important;
+	width: 100%;
+	align-items: stretch;
+}
+
+.wp-block-anchor-vector-cards .block-editor-block-list__layout > .block-list-appender {
+	grid-column: 1 / -1;
+}
+
+.wp-block-anchor-vector-card {
+	background: #fff;
+	border-radius: var(--ab-radius, 12px);
+	border-top: 3px solid #2b8fc7;
+	padding: 1.2rem 1.3rem;
+	box-shadow: var(--ab-shadow, 0 1px 3px rgba(26,39,68,0.06));
+	display: flex;
+	flex-direction: column;
+	max-width: 100% !important;
+	width: 100%;
+	min-width: 0;
+	margin: 0 !important;
+}
+
+.wp-block-anchor-vector-card.is-color-blue   { border-top-color: #2b8fc7; }
+.wp-block-anchor-vector-card.is-color-red    { border-top-color: #dc2626; }
+.wp-block-anchor-vector-card.is-color-orange { border-top-color: #d97706; }
+.wp-block-anchor-vector-card.is-color-purple { border-top-color: #8b5cf6; }
+.wp-block-anchor-vector-card.is-color-green  { border-top-color: #16a34a; }
+.wp-block-anchor-vector-card.is-color-gray   { border-top-color: #6b7280; }
+
+.wp-block-anchor-vector-card .ab-vc-head {
+	margin-bottom: 0.6rem;
+}
+
+.wp-block-anchor-vector-card .ab-vc-label {
+	display: inline-block;
+	font-family: var(--ab-mono, 'SF Mono', 'Fira Code', monospace);
+	font-size: 0.62rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	padding: 3px 8px;
+	border-radius: 6px;
+	color: #fff;
+	margin-bottom: 0.5rem;
+}
+
+.ab-vc-label.is-color-blue   { background: #2b8fc7; }
+.ab-vc-label.is-color-red    { background: #dc2626; }
+.ab-vc-label.is-color-orange { background: #d97706; }
+.ab-vc-label.is-color-purple { background: #8b5cf6; }
+.ab-vc-label.is-color-green  { background: #16a34a; }
+.ab-vc-label.is-color-gray   { background: #6b7280; }
+
+.wp-block-anchor-vector-card .ab-vc-title {
+	font-size: 1rem;
+	font-weight: 650;
+	color: var(--ab-text, #1a2744);
+	line-height: 1.3;
+}
+
+.wp-block-anchor-vector-card .ab-vc-body {
+	font-size: 0.86rem;
+	color: #3d5166;
+	line-height: 1.6;
+	flex: 1;
+}
+
+.wp-block-anchor-vector-card .ab-vc-body [contenteditable],
+.wp-block-anchor-vector-card .ab-vc-title [contenteditable],
+.wp-block-anchor-vector-card .ab-vc-detect-text[contenteditable] {
+	min-height: 1.2em;
+}
+
+.wp-block-anchor-vector-card .ab-vc-detect {
+	margin-top: 0.85rem;
+	padding-top: 0.7rem;
+	border-top: 1px solid var(--ab-border, #e4e9f0);
+	font-size: 0.8rem;
+	color: var(--ab-muted, #6b7f94);
+	line-height: 1.5;
+	display: flex;
+	gap: 0.5rem;
+	align-items: baseline;
+}
+
+.wp-block-anchor-vector-card .ab-vc-detect-label {
+	flex: 0 0 auto;
+	font-family: var(--ab-mono, 'SF Mono', 'Fira Code', monospace);
+	font-size: 0.6rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: #16a34a;
+	background: #f0fdf4;
+	border: 1px solid #bbf7d0;
+	padding: 1px 6px;
+	border-radius: 5px;
+}
+
+.wp-block-anchor-vector-card .ab-vc-detect-text {
+	display: inline-block;
+	min-width: 6rem;
+}
+
+.wp-block-anchor-vector-card .ab-vc-detect-text:empty::before,
+.wp-block-anchor-vector-card .ab-vc-title:empty::before,
+.wp-block-anchor-vector-card .ab-vc-body:empty::before {
 	content: attr(data-rich-text-placeholder);
 	opacity: 0.5;
 }

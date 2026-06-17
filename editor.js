@@ -476,7 +476,8 @@
 								{ label: 'Green', value: 'green' },
 								{ label: 'Red', value: 'red' },
 								{ label: 'Purple', value: 'purple' },
-								{ label: 'Orange', value: 'orange' }
+								{ label: 'Orange', value: 'orange' },
+								{ label: 'Gray', value: 'gray' }
 							],
 							onChange: function( val ) { props.setAttributes( { tagColor: val } ); }
 						} ),
@@ -606,6 +607,123 @@
 					onChange: function( val ) { props.setAttributes( { note: val } ); },
 					placeholder: 'What it is...'
 				} )
+			);
+		},
+		save: function() { return null; }
+	} );
+
+	/* =====================================================================
+	   VECTOR CARDS — Parent block (server-rendered children)
+	   ===================================================================== */
+
+	blocks.registerBlockType( 'anchor/vector-cards', {
+		apiVersion: 3,
+		title: 'Vector Cards',
+		icon: 'screenoptions',
+		category: 'text',
+		description: 'A grid of attack-method cards — label, how it works, and how to detect it.',
+		attributes: {
+			title: { type: 'string', default: '' }
+		},
+		edit: function( props ) {
+			const blockProps = useBlockProps( { className: 'wp-block-anchor-vector-cards' } );
+			return el( 'div', blockProps,
+				el( InspectorControls, null,
+					el( PanelBody, { title: 'Settings' },
+						el( TextControl, {
+							label: 'Grid title (optional)',
+							value: props.attributes.title,
+							onChange: function( val ) { props.setAttributes( { title: val } ); }
+						} )
+					)
+				),
+				props.attributes.title ? el( 'div', { className: 'ab-vc-heading' }, props.attributes.title ) : null,
+				el( InnerBlocks, {
+					allowedBlocks: [ 'anchor/vector-card' ],
+					template: [
+						[ 'anchor/vector-card', { label: 'PLANT', color: 'red', title: 'Backdoor from commit one' } ],
+						[ 'anchor/vector-card', { label: 'HIJACK', color: 'orange', title: 'Poisoned update push' } ]
+					]
+				} )
+			);
+		},
+		save: function() {
+			return el( InnerBlocks.Content );
+		}
+	} );
+
+	/* =====================================================================
+	   VECTOR CARD — Child block (server-rendered)
+	   ===================================================================== */
+
+	blocks.registerBlockType( 'anchor/vector-card', {
+		apiVersion: 3,
+		title: 'Vector Card',
+		icon: 'shield',
+		category: 'text',
+		parent: [ 'anchor/vector-cards' ],
+		attributes: {
+			label:   { type: 'string', default: '' },
+			color:   { type: 'string', default: 'blue' },
+			title:   { type: 'string', default: '' },
+			content: { type: 'string', default: '' },
+			detect:  { type: 'string', default: '' }
+		},
+		edit: function( props ) {
+			const { label, color, title, content, detect } = props.attributes;
+			const className = 'wp-block-anchor-vector-card is-color-' + color;
+			const blockProps = useBlockProps( { className: className } );
+
+			return el( 'div', blockProps,
+				el( InspectorControls, null,
+					el( PanelBody, { title: 'Vector Settings' },
+						el( TextControl, {
+							label: 'Label badge',
+							value: label,
+							onChange: function( val ) { props.setAttributes( { label: val } ); }
+						} ),
+						el( SelectControl, {
+							label: 'Color',
+							value: color,
+							options: [
+								{ label: 'Blue', value: 'blue' },
+								{ label: 'Red', value: 'red' },
+								{ label: 'Orange', value: 'orange' },
+								{ label: 'Purple', value: 'purple' },
+								{ label: 'Green', value: 'green' },
+								{ label: 'Gray', value: 'gray' }
+							],
+							onChange: function( val ) { props.setAttributes( { color: val } ); }
+						} )
+					)
+				),
+				el( 'div', { className: 'ab-vc-head' },
+					label ? el( 'span', { className: 'ab-vc-label is-color-' + color }, label ) : null,
+					el( RichText, {
+						tagName: 'div',
+						className: 'ab-vc-title',
+						value: title,
+						onChange: function( val ) { props.setAttributes( { title: val } ); },
+						placeholder: 'Method name...'
+					} )
+				),
+				el( RichText, {
+					tagName: 'div',
+					className: 'ab-vc-body',
+					value: content,
+					onChange: function( val ) { props.setAttributes( { content: val } ); },
+					placeholder: 'How it works...'
+				} ),
+				el( 'div', { className: 'ab-vc-detect' },
+					el( 'span', { className: 'ab-vc-detect-label' }, 'Detect' ),
+					el( RichText, {
+						tagName: 'span',
+						className: 'ab-vc-detect-text',
+						value: detect,
+						onChange: function( val ) { props.setAttributes( { detect: val } ); },
+						placeholder: 'How to detect it...'
+					} )
+				)
 			);
 		},
 		save: function() { return null; }

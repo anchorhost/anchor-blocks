@@ -384,6 +384,7 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 .ab-rc-tag.is-color-red    { background: #dc2626; }
 .ab-rc-tag.is-color-purple { background: #8b5cf6; }
 .ab-rc-tag.is-color-orange { background: #d97706; }
+.ab-rc-tag.is-color-gray   { background: #6b7280; }
 
 .wp-block-anchor-report-card .ab-rc-title {
 	font-size: 0.95rem;
@@ -531,4 +532,126 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 	background: #f5f8fb;
 	padding: 1px 5px;
 	border-radius: 4px;
+}
+
+/* ============================================================
+   VECTOR CARDS — Attack-method grid
+   ============================================================ */
+.wp-block-anchor-vector-cards {
+	margin: 1.5rem 0;
+}
+
+.wp-block-anchor-vector-cards .ab-vc-heading {
+	font-size: 0.85rem;
+	font-weight: 650;
+	margin-bottom: 1rem;
+}
+
+/* Frontend: direct children are vector cards */
+body:not(.wp-admin) .wp-block-anchor-vector-cards {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 0.85rem;
+	align-items: stretch;
+}
+
+body:not(.wp-admin) .wp-block-anchor-vector-cards .ab-vc-heading {
+	grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+	body:not(.wp-admin) .wp-block-anchor-vector-cards {
+		grid-template-columns: 1fr;
+	}
+}
+
+.wp-block-anchor-vector-card {
+	background: #fff;
+	border-radius: var(--ab-radius);
+	border-top: 3px solid #2b8fc7;
+	padding: 1.2rem 1.3rem;
+	box-shadow: var(--ab-shadow);
+	display: flex;
+	flex-direction: column;
+}
+
+.wp-block-anchor-vector-card.is-color-blue   { border-top-color: #2b8fc7; }
+.wp-block-anchor-vector-card.is-color-red    { border-top-color: #dc2626; }
+.wp-block-anchor-vector-card.is-color-orange { border-top-color: #d97706; }
+.wp-block-anchor-vector-card.is-color-purple { border-top-color: #8b5cf6; }
+.wp-block-anchor-vector-card.is-color-green  { border-top-color: #16a34a; }
+.wp-block-anchor-vector-card.is-color-gray   { border-top-color: #6b7280; }
+
+.wp-block-anchor-vector-card .ab-vc-head {
+	margin-bottom: 0.6rem;
+}
+
+.wp-block-anchor-vector-card .ab-vc-label {
+	display: inline-block;
+	font-family: var(--ab-mono);
+	font-size: 0.62rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	padding: 3px 8px;
+	border-radius: 6px;
+	color: #fff;
+	margin-bottom: 0.5rem;
+}
+
+.ab-vc-label.is-color-blue   { background: #2b8fc7; }
+.ab-vc-label.is-color-red    { background: #dc2626; }
+.ab-vc-label.is-color-orange { background: #d97706; }
+.ab-vc-label.is-color-purple { background: #8b5cf6; }
+.ab-vc-label.is-color-green  { background: #16a34a; }
+.ab-vc-label.is-color-gray   { background: #6b7280; }
+
+.wp-block-anchor-vector-card .ab-vc-title {
+	font-size: 1rem;
+	font-weight: 650;
+	color: var(--ab-text);
+	line-height: 1.3;
+}
+
+.wp-block-anchor-vector-card .ab-vc-body {
+	font-size: 0.86rem;
+	color: #3d5166;
+	line-height: 1.6;
+	flex: 1;
+}
+
+.wp-block-anchor-vector-card .ab-vc-body code,
+.wp-block-anchor-vector-card .ab-vc-detect code {
+	font-family: var(--ab-mono);
+	font-size: 0.85em;
+	background: #f5f7fa;
+	padding: 2px 6px;
+	border-radius: 4px;
+	word-break: break-word;
+}
+
+.wp-block-anchor-vector-card .ab-vc-detect {
+	margin-top: 0.85rem;
+	padding-top: 0.7rem;
+	border-top: 1px solid var(--ab-border);
+	font-size: 0.8rem;
+	color: var(--ab-muted);
+	line-height: 1.5;
+	display: flex;
+	gap: 0.5rem;
+	align-items: baseline;
+}
+
+.wp-block-anchor-vector-card .ab-vc-detect-label {
+	flex: 0 0 auto;
+	font-family: var(--ab-mono);
+	font-size: 0.6rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: #16a34a;
+	background: #f0fdf4;
+	border: 1px solid #bbf7d0;
+	padding: 1px 6px;
+	border-radius: 5px;
 }

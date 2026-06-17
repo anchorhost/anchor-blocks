@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Anchor Blocks
- * Description: Custom blocks for Anchor Hosting blog posts — Conversation, Timeline, Callout, Stats Dashboard, Bar Chart, Report Card, and Indicators of Compromise.
- * Version: 1.3.0
+ * Description: Custom blocks for Anchor Hosting blog posts — Conversation, Timeline, Callout, Stats Dashboard, Bar Chart, Report Card, Indicators of Compromise, and Vector Cards.
+ * Version: 1.4.0
  * Author: Austin Ginder
  * Author URI: https://anchor.host
  * License: MIT
@@ -10,7 +10,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'ANCHOR_BLOCKS_VERSION', '1.3.0' );
+define( 'ANCHOR_BLOCKS_VERSION', '1.4.0' );
 define( 'ANCHOR_BLOCKS_URL', plugin_dir_url( __FILE__ ) );
 define( 'ANCHOR_BLOCKS_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -71,6 +71,13 @@ add_action( 'init', function() {
 		],
 	] ) );
 
+	register_block_type( 'anchor/vector-cards', array_merge( $block_args, [
+		'render_callback' => 'anchor_blocks_render_vector_cards',
+		'attributes'      => [
+			'title' => [ 'type' => 'string', 'default' => '' ],
+		],
+	] ) );
+
 	// Child/leaf blocks — server-side rendered to avoid validation errors
 	register_block_type( 'anchor/conversation-message', array_merge( $block_args, [
 		'render_callback' => 'anchor_blocks_render_conversation_message',
@@ -128,6 +135,18 @@ add_action( 'init', function() {
 			'color' => [ 'type' => 'string', 'default' => 'red' ],
 			'value' => [ 'type' => 'string', 'default' => '' ],
 			'note'  => [ 'type' => 'string', 'default' => '' ],
+		],
+	] ) );
+
+	// Vector Card — child (server-rendered)
+	register_block_type( 'anchor/vector-card', array_merge( $block_args, [
+		'render_callback' => 'anchor_blocks_render_vector_card',
+		'attributes'      => [
+			'label'   => [ 'type' => 'string', 'default' => '' ],
+			'color'   => [ 'type' => 'string', 'default' => 'blue' ],
+			'title'   => [ 'type' => 'string', 'default' => '' ],
+			'content' => [ 'type' => 'string', 'default' => '' ],
+			'detect'  => [ 'type' => 'string', 'default' => '' ],
 		],
 	] ) );
 
@@ -434,6 +453,62 @@ function anchor_blocks_inline_email_styles( $args ) {
 		$html
 	);
 
+	// Rebuild vector-cards as email-safe stacked cards
+	$vc_colors = [
+		'blue'   => '#2b8fc7',
+		'red'    => '#dc2626',
+		'orange' => '#d97706',
+		'purple' => '#8b5cf6',
+		'green'  => '#16a34a',
+		'gray'   => '#6b7280',
+	];
+	$html = preg_replace_callback(
+		'/<div[^>]*wp-block-anchor-vector-cards"[^>]*>([\s\S]*?)\n<\/div>\n/s',
+		function( $cards ) use ( $vc_colors ) {
+			$inner = $cards[1];
+
+			$heading_html = '';
+			if ( preg_match( '/<div[^>]*ab-vc-heading[^>]*>(.*?)<\/div>/s', $inner, $h ) ) {
+				$heading_html = '<tr><td style="padding:0 0 12px 0;font-size:0.85rem;font-weight:650">' . $h[1] . '</td></tr>';
+			}
+
+			$rows = '';
+			preg_match_all(
+				'/<div[^>]*wp-block-anchor-vector-card is-color-(\w+)"[^>]*>\s*<div[^>]*ab-vc-head[^>]*>(?:<span[^>]*ab-vc-label[^>]*>(.*?)<\/span>)?(?:<div[^>]*ab-vc-title[^>]*>(.*?)<\/div>)?<\/div>\s*<div[^>]*ab-vc-body[^>]*>([\s\S]*?)<\/div>\s*(?:<div[^>]*ab-vc-detect[^>]*>.*?ab-vc-detect-text"[^>]*>(.*?)<\/span>.*?<\/div>)?\s*<\/div>/s',
+				$inner, $items, PREG_SET_ORDER
+			);
+
+			foreach ( $items as $m ) {
+				$accent = $vc_colors[ $m[1] ] ?? '#2b8fc7';
+				$label  = $m[2] ?? '';
+				$title  = $m[3] ?? '';
+				$body   = $m[4] ?? '';
+				$detect = $m[5] ?? '';
+
+				$label_html = $label
+					? '<span style="display:inline-block;font-family:\'SF Mono\',monospace;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:3px 8px;border-radius:6px;color:#fff;background:' . $accent . '">' . $label . '</span>'
+					: '';
+				$title_html = $title
+					? '<div style="font-size:1rem;font-weight:650;color:#1a2744;margin-top:' . ( $label ? '8px' : '0' ) . '">' . $title . '</div>'
+					: '';
+				$detect_html = $detect
+					? '<div style="margin-top:12px;padding-top:10px;border-top:1px solid #e4e9f0;font-size:0.8rem;color:#6b7f94;line-height:1.5"><span style="font-family:\'SF Mono\',monospace;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#16a34a">Detect &mdash; </span>' . $detect . '</div>'
+					: '';
+
+				$rows .= '<tr><td style="background:#fff;border-radius:12px;border-top:3px solid ' . $accent . ';padding:16px 18px;box-shadow:0 1px 3px rgba(26,39,68,0.06)">'
+					. $label_html
+					. $title_html
+					. '<div style="font-size:0.86rem;color:#3d5166;line-height:1.6;margin-top:8px">' . $body . '</div>'
+					. $detect_html
+					. '</td></tr><tr><td style="height:10px;font-size:1px;line-height:1px">&nbsp;</td></tr>';
+			}
+
+			return '<table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin:1.5rem 0">'
+				. $heading_html . $rows . '</table>' . "\n";
+		},
+		$html
+	);
+
 	$args['message'] = $html;
 	return $args;
 }
@@ -511,6 +586,35 @@ function anchor_blocks_render_ioc_row( $attrs ) {
 	return sprintf(
 		'<div class="wp-block-anchor-ioc-row"><span class="ab-ioc-type is-color-%s">%s</span><code class="ab-ioc-value">%s</code>%s</div>',
 		$color, $label, $value, $note_html
+	);
+}
+
+function anchor_blocks_render_vector_cards( $attrs, $content ) {
+	$title = esc_html( $attrs['title'] ?? '' );
+	$title_html = $title ? sprintf( '<div class="ab-vc-heading">%s</div>', $title ) : '';
+
+	return sprintf(
+		'<div class="wp-block-anchor-vector-cards">%s%s</div>',
+		$title_html, $content
+	);
+}
+
+function anchor_blocks_render_vector_card( $attrs ) {
+	$label   = esc_html( $attrs['label'] ?? '' );
+	$color   = esc_attr( $attrs['color'] ?? 'blue' );
+	$title   = wp_kses_post( $attrs['title'] ?? '' );
+	$content = wp_kses_post( $attrs['content'] ?? '' );
+	$detect  = wp_kses_post( $attrs['detect'] ?? '' );
+
+	$label_html  = $label ? sprintf( '<span class="ab-vc-label is-color-%s">%s</span>', $color, $label ) : '';
+	$title_html  = $title ? sprintf( '<div class="ab-vc-title">%s</div>', $title ) : '';
+	$detect_html = $detect
+		? sprintf( '<div class="ab-vc-detect"><span class="ab-vc-detect-label">Detect</span><span class="ab-vc-detect-text">%s</span></div>', $detect )
+		: '';
+
+	return sprintf(
+		'<div class="wp-block-anchor-vector-card is-color-%s"><div class="ab-vc-head">%s%s</div><div class="ab-vc-body">%s</div>%s</div>',
+		$color, $label_html, $title_html, $content, $detect_html
 	);
 }
 
