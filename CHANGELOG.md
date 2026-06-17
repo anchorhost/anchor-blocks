@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0 — 2026-06-17
+
+- Vector Cards block (`vector-cards` / `vector-card`): a responsive grid of attack-method cards with a colored label badge, color-keyed top accent, how-it-works body, and a "Detect" footer. Includes an email-safe stacked-card rebuild
+- Report Card tag now supports a `gray` color
+
 ## 1.3.0 — 2026-06-14
 
 - Indicators of Compromise block (`ioc-list` / `ioc-row`) with colored type pills, monospace values, notes, and an email-safe table rebuild
