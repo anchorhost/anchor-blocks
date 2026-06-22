@@ -564,3 +564,39 @@
 	content: attr(data-rich-text-placeholder);
 	opacity: 0.5;
 }
+
+/* ── Term List (in editor) ── */
+
+.wp-block-anchor-term-list {
+	background: #fff;
+	border-radius: var(--ab-radius, 12px);
+	padding: 0.4rem 2rem;
+	margin: 1.5rem 0;
+	box-shadow: var(--ab-shadow, 0 1px 3px rgba(26,39,68,0.06));
+}
+
+.wp-block-anchor-term-list .ab-termlist-heading {
+	font-size: 0.85rem;
+	font-weight: 650;
+	color: var(--ab-muted, #6b7f94);
+	padding-top: 1.4rem;
+}
+
+/* The frontend `.wp-block-anchor-term + .wp-block-anchor-term` divider can't
+   cross the editor's per-block wrappers, so add it on wrapped siblings here. */
+.wp-block-anchor-term-list .block-editor-block-list__layout > * + * .wp-block-anchor-term {
+	border-top: 1px solid var(--ab-border, #e4e9f0);
+}
+
+.wp-block-anchor-term .ab-term-label [contenteditable],
+.wp-block-anchor-term .ab-term-title [contenteditable],
+.wp-block-anchor-term .ab-term-body [contenteditable] {
+	min-height: 1em;
+}
+
+.wp-block-anchor-term .ab-term-label:empty::before,
+.wp-block-anchor-term .ab-term-title:empty::before,
+.wp-block-anchor-term .ab-term-body:empty::before {
+	content: attr(data-rich-text-placeholder);
+	opacity: 0.5;
+}

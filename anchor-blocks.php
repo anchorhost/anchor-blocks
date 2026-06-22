@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Anchor Blocks
- * Description: Custom blocks for Anchor Hosting blog posts — Conversation, Timeline, Callout, Stats Dashboard, Bar Chart, Report Card, Indicators of Compromise, and Vector Cards.
- * Version: 1.4.0
+ * Description: Custom blocks for Anchor Hosting blog posts — Conversation, Timeline, Callout, Stats Dashboard, Bar Chart, Report Card, Indicators of Compromise, Vector Cards, and Term List.
+ * Version: 1.5.0
  * Author: Austin Ginder
  * Author URI: https://anchor.host
  * License: MIT
@@ -10,7 +10,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'ANCHOR_BLOCKS_VERSION', '1.4.0' );
+define( 'ANCHOR_BLOCKS_VERSION', '1.5.0' );
 define( 'ANCHOR_BLOCKS_URL', plugin_dir_url( __FILE__ ) );
 define( 'ANCHOR_BLOCKS_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -73,6 +73,13 @@ add_action( 'init', function() {
 
 	register_block_type( 'anchor/vector-cards', array_merge( $block_args, [
 		'render_callback' => 'anchor_blocks_render_vector_cards',
+		'attributes'      => [
+			'title' => [ 'type' => 'string', 'default' => '' ],
+		],
+	] ) );
+
+	register_block_type( 'anchor/term-list', array_merge( $block_args, [
+		'render_callback' => 'anchor_blocks_render_term_list',
 		'attributes'      => [
 			'title' => [ 'type' => 'string', 'default' => '' ],
 		],
@@ -147,6 +154,17 @@ add_action( 'init', function() {
 			'title'   => [ 'type' => 'string', 'default' => '' ],
 			'content' => [ 'type' => 'string', 'default' => '' ],
 			'detect'  => [ 'type' => 'string', 'default' => '' ],
+		],
+	] ) );
+
+	// Term — child (server-rendered)
+	register_block_type( 'anchor/term', array_merge( $block_args, [
+		'render_callback' => 'anchor_blocks_render_term',
+		'attributes'      => [
+			'label'   => [ 'type' => 'string', 'default' => '' ],
+			'color'   => [ 'type' => 'string', 'default' => 'blue' ],
+			'title'   => [ 'type' => 'string', 'default' => '' ],
+			'content' => [ 'type' => 'string', 'default' => '' ],
 		],
 	] ) );
 
@@ -509,6 +527,63 @@ function anchor_blocks_inline_email_styles( $args ) {
 		$html
 	);
 
+	// Rebuild term-list as an email-safe single card
+	$term_colors = [
+		'blue'   => '#2b8fc7',
+		'red'    => '#dc2626',
+		'orange' => '#d97706',
+		'purple' => '#8b5cf6',
+		'green'  => '#16a34a',
+		'gray'   => '#6b7280',
+	];
+	$html = preg_replace_callback(
+		'/<div[^>]*wp-block-anchor-term-list"[^>]*>([\s\S]*?)\n<\/div>\n/s',
+		function( $cards ) use ( $term_colors ) {
+			$inner = $cards[1];
+
+			$heading_html = '';
+			if ( preg_match( '/<div[^>]*ab-termlist-heading[^>]*>(.*?)<\/div>/s', $inner, $h ) ) {
+				$heading_html = '<tr><td style="padding:0 0 12px 0;font-size:0.85rem;font-weight:650">' . $h[1] . '</td></tr>';
+			}
+
+			$rows  = '';
+			$first = true;
+			preg_match_all(
+				'/<div[^>]*wp-block-anchor-term is-color-(\w+)"[^>]*>(?:<div[^>]*ab-term-label[^>]*>(.*?)<\/div>)?(?:<div[^>]*ab-term-title[^>]*>(.*?)<\/div>)?<div[^>]*ab-term-body[^>]*>([\s\S]*?)<\/div>\s*<\/div>/s',
+				$inner, $items, PREG_SET_ORDER
+			);
+
+			foreach ( $items as $m ) {
+				$accent = $term_colors[ $m[1] ] ?? '#2b8fc7';
+				$label  = $m[2] ?? '';
+				$title  = $m[3] ?? '';
+				$body   = $m[4] ?? '';
+
+				$border = $first ? '' : 'border-top:1px solid #e4e9f0;';
+				$first  = false;
+
+				$label_html = $label
+					? '<div style="font-size:1.5rem;font-weight:800;line-height:1;color:' . $accent . ';margin-bottom:10px">' . $label . '</div>'
+					: '';
+				$title_html = $title
+					? '<div style="font-size:1rem;font-weight:700;color:#1a2744;margin-bottom:8px">' . $title . '</div>'
+					: '';
+
+				$rows .= '<tr><td style="padding:22px 0;' . $border . '">'
+					. $label_html
+					. $title_html
+					. '<div style="font-size:0.9rem;color:#3d5166;line-height:1.7">' . $body . '</div>'
+					. '</td></tr>';
+			}
+
+			return '<table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;margin:1.5rem 0">'
+				. '<tr><td style="padding:0 24px">'
+				. '<table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse">'
+				. $heading_html . $rows . '</table></td></tr></table>' . "\n";
+		},
+		$html
+	);
+
 	$args['message'] = $html;
 	return $args;
 }
@@ -615,6 +690,31 @@ function anchor_blocks_render_vector_card( $attrs ) {
 	return sprintf(
 		'<div class="wp-block-anchor-vector-card is-color-%s"><div class="ab-vc-head">%s%s</div><div class="ab-vc-body">%s</div>%s</div>',
 		$color, $label_html, $title_html, $content, $detect_html
+	);
+}
+
+function anchor_blocks_render_term_list( $attrs, $content ) {
+	$title = esc_html( $attrs['title'] ?? '' );
+	$title_html = $title ? sprintf( '<div class="ab-termlist-heading">%s</div>', $title ) : '';
+
+	return sprintf(
+		'<div class="wp-block-anchor-term-list">%s%s</div>',
+		$title_html, $content
+	);
+}
+
+function anchor_blocks_render_term( $attrs ) {
+	$label   = wp_kses_post( $attrs['label'] ?? '' );
+	$color   = esc_attr( $attrs['color'] ?? 'blue' );
+	$title   = wp_kses_post( $attrs['title'] ?? '' );
+	$content = wp_kses_post( $attrs['content'] ?? '' );
+
+	$label_html = $label ? sprintf( '<div class="ab-term-label is-color-%s">%s</div>', $color, $label ) : '';
+	$title_html = $title ? sprintf( '<div class="ab-term-title">%s</div>', $title ) : '';
+
+	return sprintf(
+		'<div class="wp-block-anchor-term is-color-%s">%s%s<div class="ab-term-body">%s</div></div>',
+		$color, $label_html, $title_html, $content
 	);
 }
 

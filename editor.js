@@ -729,4 +729,109 @@
 		save: function() { return null; }
 	} );
 
+	/* =====================================================================
+	   TERM LIST — Parent block (server-rendered children)
+	   ===================================================================== */
+
+	blocks.registerBlockType( 'anchor/term-list', {
+		apiVersion: 3,
+		title: 'Term List',
+		icon: 'editor-ul',
+		category: 'text',
+		description: 'A single card listing terms — each a large colored label, a title, and a description.',
+		attributes: {
+			title: { type: 'string', default: '' }
+		},
+		edit: function( props ) {
+			const blockProps = useBlockProps( { className: 'wp-block-anchor-term-list' } );
+			return el( 'div', blockProps,
+				el( InspectorControls, null,
+					el( PanelBody, { title: 'Settings' },
+						el( TextControl, {
+							label: 'List title (optional)',
+							value: props.attributes.title,
+							onChange: function( val ) { props.setAttributes( { title: val } ); }
+						} )
+					)
+				),
+				props.attributes.title ? el( 'div', { className: 'ab-termlist-heading' }, props.attributes.title ) : null,
+				el( InnerBlocks, {
+					allowedBlocks: [ 'anchor/term' ],
+					template: [
+						[ 'anchor/term', { label: 'ENCODE', color: 'red', title: 'Payload as data, not code' } ],
+						[ 'anchor/term', { label: 'DEFER', color: 'orange', title: 'unserialize() gadget chains' } ]
+					]
+				} )
+			);
+		},
+		save: function() {
+			return el( InnerBlocks.Content );
+		}
+	} );
+
+	/* =====================================================================
+	   TERM — Child block (server-rendered)
+	   ===================================================================== */
+
+	blocks.registerBlockType( 'anchor/term', {
+		apiVersion: 3,
+		title: 'Term',
+		icon: 'tag',
+		category: 'text',
+		parent: [ 'anchor/term-list' ],
+		attributes: {
+			label:   { type: 'string', default: '' },
+			color:   { type: 'string', default: 'blue' },
+			title:   { type: 'string', default: '' },
+			content: { type: 'string', default: '' }
+		},
+		edit: function( props ) {
+			const { label, color, title, content } = props.attributes;
+			const className = 'wp-block-anchor-term is-color-' + color;
+			const blockProps = useBlockProps( { className: className } );
+
+			return el( 'div', blockProps,
+				el( InspectorControls, null,
+					el( PanelBody, { title: 'Term Settings' },
+						el( SelectControl, {
+							label: 'Label color',
+							value: color,
+							options: [
+								{ label: 'Blue', value: 'blue' },
+								{ label: 'Red', value: 'red' },
+								{ label: 'Orange', value: 'orange' },
+								{ label: 'Purple', value: 'purple' },
+								{ label: 'Green', value: 'green' },
+								{ label: 'Gray', value: 'gray' }
+							],
+							onChange: function( val ) { props.setAttributes( { color: val } ); }
+						} )
+					)
+				),
+				el( RichText, {
+					tagName: 'div',
+					className: 'ab-term-label is-color-' + color,
+					value: label,
+					onChange: function( val ) { props.setAttributes( { label: val } ); },
+					placeholder: 'LABEL'
+				} ),
+				el( RichText, {
+					tagName: 'div',
+					className: 'ab-term-title',
+					value: title,
+					onChange: function( val ) { props.setAttributes( { title: val } ); },
+					placeholder: 'Title...'
+				} ),
+				el( RichText, {
+					tagName: 'div',
+					className: 'ab-term-body',
+					value: content,
+					onChange: function( val ) { props.setAttributes( { content: val } ); },
+					placeholder: 'Description...'
+				} )
+			);
+		},
+		save: function() { return null; }
+	} );
+
 } )( window.wp.blocks, window.wp.element, window.wp.blockEditor, window.wp.components );
