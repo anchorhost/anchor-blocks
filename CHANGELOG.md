@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0 — 2026-06-22
+
+- Term List block (`term-list` / `term`): a single card listing terms, each with a large color-keyed display label, a bold title, and a rich-text body. Includes an email-safe single-card rebuild
+
 ## 1.4.0 — 2026-06-17
 
 - Vector Cards block (`vector-cards` / `vector-card`): a responsive grid of attack-method cards with a colored label badge, color-keyed top accent, how-it-works body, and a "Detect" footer. Includes an email-safe stacked-card rebuild
