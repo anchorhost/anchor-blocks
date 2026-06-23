@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.0 — 2026-06-23
+
+- Data Table block (`data-table`): a single server-rendered monospace data table. Title, columns, per-column alignment, rows, and an optional highlighted row all live in block attributes (authored via the post generator). Includes an email-safe inline-style rebuild
+
 ## 1.5.0 — 2026-06-22
 
 - Term List block (`term-list` / `term`): a single card listing terms, each with a large color-keyed display label, a bold title, and a rich-text body. Includes an email-safe single-card rebuild
