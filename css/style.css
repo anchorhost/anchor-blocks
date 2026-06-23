@@ -345,6 +345,64 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 .ab-bar-fill.is-color-teal   { background: #0e8a8a; }
 .ab-bar-fill.is-color-gray   { background: #6b7280; }
 
+/* ── Data Table Block ── */
+
+.wp-block-anchor-data-table {
+	background: #fff;
+	border-radius: var(--ab-radius);
+	padding: 1.5rem;
+	margin: 1.5rem 0;
+	box-shadow: var(--ab-shadow);
+}
+
+.wp-block-anchor-data-table .ab-dt-title {
+	font-size: 0.85rem;
+	font-weight: 650;
+	margin-bottom: 1rem;
+}
+
+.wp-block-anchor-data-table .ab-dt-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.wp-block-anchor-data-table .ab-dt-th {
+	font-family: var(--ab-mono);
+	font-size: 0.72rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: var(--ab-muted);
+	padding: 0.55rem 0.9rem;
+	border-bottom: 2px solid #1a2744;
+	white-space: nowrap;
+}
+
+.wp-block-anchor-data-table .ab-dt-td {
+	font-family: var(--ab-mono);
+	font-size: 0.82rem;
+	color: #2d3f52;
+	padding: 0.5rem 0.9rem;
+	border-bottom: 1px solid var(--ab-border);
+}
+
+.wp-block-anchor-data-table .ab-dt-tr:last-child .ab-dt-td {
+	border-bottom: none;
+}
+
+.wp-block-anchor-data-table .ab-dt-tr.is-highlight {
+	background: #f8fafc;
+}
+
+.wp-block-anchor-data-table .ab-dt-tr.is-highlight .ab-dt-td {
+	font-weight: 700;
+	color: #1a2744;
+}
+
+.wp-block-anchor-data-table .align-left   { text-align: left; }
+.wp-block-anchor-data-table .align-right  { text-align: right; }
+.wp-block-anchor-data-table .align-center { text-align: center; }
+
 /* ── Report Card Block ── */
 
 .wp-block-anchor-report-card {

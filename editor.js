@@ -834,4 +834,63 @@
 		save: function() { return null; }
 	} );
 
+	/* =====================================================================
+	   DATA TABLE — single server-rendered block (data in attributes)
+	   ===================================================================== */
+	blocks.registerBlockType( 'anchor/data-table', {
+		apiVersion: 3,
+		title: 'Data Table',
+		icon: 'editor-table',
+		category: 'text',
+		description: 'A clean monospace data table. Columns/rows live in attributes (authored via the post generator).',
+		attributes: {
+			title:     { type: 'string', default: '' },
+			columns:   { type: 'array',  default: [] },
+			align:     { type: 'array',  default: [] },
+			rows:      { type: 'array',  default: [] },
+			highlight: { type: 'number', default: -1 }
+		},
+		edit: function( props ) {
+			const { title, columns, align, rows, highlight } = props.attributes;
+			const blockProps = useBlockProps( { className: 'wp-block-anchor-data-table' } );
+
+			const cols = ( columns && columns.length ) ? columns : [ 'Column A', 'Column B' ];
+			const data = ( rows && rows.length ) ? rows : [ [ 'Sample', '0' ] ];
+			const alignOf = function( i ) {
+				const a = align && align[ i ];
+				return ( a === 'right' || a === 'center' ) ? a : 'left';
+			};
+
+			const thead = el( 'thead', null,
+				el( 'tr', null, cols.map( function( c, i ) {
+					return el( 'th', { key: i, className: 'ab-dt-th align-' + alignOf( i ) }, c );
+				} ) )
+			);
+			const tbody = el( 'tbody', null, data.map( function( row, ri ) {
+				return el( 'tr', { key: ri, className: 'ab-dt-tr' + ( ri === highlight ? ' is-highlight' : '' ) },
+					( row || [] ).map( function( cell, ci ) {
+						return el( 'td', { key: ci, className: 'ab-dt-td align-' + alignOf( ci ) }, cell );
+					} )
+				);
+			} ) );
+
+			return el( 'div', blockProps,
+				el( InspectorControls, null,
+					el( PanelBody, { title: 'Data Table' },
+						el( TextControl, {
+							label: 'Title',
+							value: title,
+							onChange: function( val ) { props.setAttributes( { title: val } ); }
+						} ),
+						el( 'p', { style: { fontSize: '12px', color: '#6b7f94', marginTop: '8px' } },
+							'Columns, rows, alignment, and the highlighted row are set in the block attributes (authored via the post generator).' )
+					)
+				),
+				title ? el( 'div', { className: 'ab-dt-title' }, title ) : null,
+				el( 'table', { className: 'ab-dt-table' }, thead, tbody )
+			);
+		},
+		save: function() { return null; }
+	} );
+
 } )( window.wp.blocks, window.wp.element, window.wp.blockEditor, window.wp.components );

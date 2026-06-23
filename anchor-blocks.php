@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Anchor Blocks
  * Description: Custom blocks for Anchor Hosting blog posts — Conversation, Timeline, Callout, Stats Dashboard, Bar Chart, Report Card, Indicators of Compromise, Vector Cards, and Term List.
- * Version: 1.5.0
+ * Version: 1.6.0
  * Author: Austin Ginder
  * Author URI: https://anchor.host
  * License: MIT
@@ -10,7 +10,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'ANCHOR_BLOCKS_VERSION', '1.5.0' );
+define( 'ANCHOR_BLOCKS_VERSION', '1.6.0' );
 define( 'ANCHOR_BLOCKS_URL', plugin_dir_url( __FILE__ ) );
 define( 'ANCHOR_BLOCKS_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -178,6 +178,18 @@ add_action( 'init', function() {
 			'count'    => [ 'type' => 'string', 'default' => '' ],
 		],
 	] ) );
+
+	// Data Table — single server-rendered block (data lives in attributes)
+	register_block_type( 'anchor/data-table', array_merge( $block_args, [
+		'render_callback' => 'anchor_blocks_render_data_table',
+		'attributes'      => [
+			'title'     => [ 'type' => 'string', 'default' => '' ],
+			'columns'   => [ 'type' => 'array',  'default' => [] ],
+			'align'     => [ 'type' => 'array',  'default' => [] ],
+			'rows'      => [ 'type' => 'array',  'default' => [] ],
+			'highlight' => [ 'type' => 'number', 'default' => -1 ],
+		],
+	] ) );
 } );
 
 // Ensure block styles load inside the editor iframe
@@ -259,6 +271,42 @@ function anchor_blocks_inline_email_styles( $args ) {
 
 	foreach ( $map as $find => $replace ) {
 		$html = str_replace( $find, $replace, $html );
+	}
+
+	// Data Table — inline-style its own classes BEFORE the generic table rules
+	// below, so the style= attribute makes the generic <td> rule skip these cells.
+	if ( strpos( $html, 'wp-block-anchor-data-table' ) !== false ) {
+		$html = str_replace(
+			'class="wp-block-anchor-data-table"',
+			'class="wp-block-anchor-data-table" style="background:#fff;border-radius:12px;padding:1.5rem;margin:1.5rem 0;box-shadow:0 1px 3px rgba(26,39,68,0.06)"',
+			$html
+		);
+		$html = str_replace(
+			'class="ab-dt-title"',
+			'class="ab-dt-title" style="font-size:0.85rem;font-weight:650;margin-bottom:1rem"',
+			$html
+		);
+		$html = str_replace(
+			'class="ab-dt-table"',
+			'class="ab-dt-table" style="width:100%;border-collapse:collapse"',
+			$html
+		);
+		$html = preg_replace(
+			'/<th class="ab-dt-th align-(left|right|center)">/',
+			'<th style="text-align:$1;padding:0.55rem 0.9rem;border-bottom:2px solid #1a2744;font-family:\'SF Mono\',monospace;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;color:#6b7f94">',
+			$html
+		);
+		$html = preg_replace(
+			'/<td class="ab-dt-td align-(left|right|center)">/',
+			'<td style="text-align:$1;padding:0.5rem 0.9rem;border-bottom:1px solid #e4e9f0;font-family:\'SF Mono\',monospace;font-size:0.82rem;color:#2d3f52">',
+			$html
+		);
+		$html = str_replace(
+			'<tr class="ab-dt-tr is-highlight">',
+			'<tr class="ab-dt-tr" style="background:#f8fafc;font-weight:700;color:#1a2744">',
+			$html
+		);
+		$html = str_replace( '<tr class="ab-dt-tr">', '<tr>', $html );
 	}
 
 	// Style WordPress block tables BEFORE timeline rebuild (so timeline cells aren't affected)
@@ -637,6 +685,44 @@ function anchor_blocks_render_bar_chart( $attrs, $content ) {
 	return sprintf(
 		'<div class="wp-block-anchor-bar-chart">%s%s</div>',
 		$title_html, $content
+	);
+}
+
+function anchor_blocks_render_data_table( $attrs ) {
+	$title     = $attrs['title'] ?? '';
+	$columns   = is_array( $attrs['columns'] ?? null ) ? $attrs['columns'] : [];
+	$align     = is_array( $attrs['align'] ?? null ) ? $attrs['align'] : [];
+	$rows      = is_array( $attrs['rows'] ?? null ) ? $attrs['rows'] : [];
+	$highlight = intval( $attrs['highlight'] ?? -1 );
+
+	$align_of = function( $i ) use ( $align ) {
+		$a = $align[ $i ] ?? 'left';
+		return in_array( $a, [ 'left', 'right', 'center' ], true ) ? $a : 'left';
+	};
+
+	$thead = '';
+	foreach ( $columns as $i => $c ) {
+		$thead .= sprintf( '<th class="ab-dt-th align-%s">%s</th>', $align_of( $i ), esc_html( $c ) );
+	}
+
+	$tbody = '';
+	foreach ( $rows as $ri => $row ) {
+		$cells = '';
+		foreach ( (array) $row as $ci => $cell ) {
+			$cells .= sprintf( '<td class="ab-dt-td align-%s">%s</td>', $align_of( $ci ), esc_html( $cell ) );
+		}
+		$tbody .= sprintf(
+			'<tr class="ab-dt-tr%s">%s</tr>',
+			$ri === $highlight ? ' is-highlight' : '',
+			$cells
+		);
+	}
+
+	$title_html = $title !== '' ? sprintf( '<div class="ab-dt-title">%s</div>', esc_html( $title ) ) : '';
+
+	return sprintf(
+		'<div class="wp-block-anchor-data-table">%s<table class="ab-dt-table"><thead><tr>%s</tr></thead><tbody>%s</tbody></table></div>',
+		$title_html, $thead, $tbody
 	);
 }
 
