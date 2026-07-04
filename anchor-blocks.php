@@ -15,6 +15,7 @@ define( 'ANCHOR_BLOCKS_URL', plugin_dir_url( __FILE__ ) );
 define( 'ANCHOR_BLOCKS_DIR', plugin_dir_path( __FILE__ ) );
 
 require_once ANCHOR_BLOCKS_DIR . 'app/Updater.php';
+require_once ANCHOR_BLOCKS_DIR . 'app/MinnAdmin.php';
 new AnchorBlocks\Updater();
 
 add_action( 'init', function() {
