@@ -34,6 +34,10 @@ add_filter( 'minn_admin_block_forms', function ( $forms ) {
 				'pattern' => '(<div class="ab-conv-header">)([^<]*)(</div>)',
 			],
 		],
+		'insert'      => [
+			'label'    => 'Conversation',
+			'template' => "<!-- wp:anchor/conversation -->\n<div class=\"wp-block-anchor-conversation\"><div class=\"ab-conv-header\">Claude Code Session</div><!-- wp:anchor/conversation-message {\"content\":\"First message.\"} /-->\n\n<!-- wp:anchor/conversation-message {\"role\":\"assistant\",\"label\":\"Claude\",\"content\":\"First reply.\"} /--></div>\n<!-- /wp:anchor/conversation -->",
+		],
 	];
 	$forms['anchor/conversation-message'] = [
 		'order'      => [ 'role', 'label', 'content' ],
@@ -55,6 +59,12 @@ add_filter( 'minn_admin_block_forms', function ( $forms ) {
 			'color' => [ 'label' => 'Color', 'control' => 'select', 'options' => $colors ],
 		],
 	];
+	$forms['anchor/timeline'] = [
+		'insert' => [
+			'label'    => 'Timeline',
+			'template' => "<!-- wp:anchor/timeline -->\n<div class=\"wp-block-anchor-timeline\"><!-- wp:anchor/timeline-item {\"date\":\"Today\",\"content\":\"First event.\"} /--></div>\n<!-- /wp:anchor/timeline -->",
+		],
+	];
 	$forms['anchor/timeline-item'] = [
 		'order'      => [ 'date', 'content', 'color' ],
 		'attributes' => [
@@ -68,11 +78,29 @@ add_filter( 'minn_admin_block_forms', function ( $forms ) {
 		'attributes' => [
 			'title'   => [ 'label' => 'Title' ],
 			'content' => [ 'label' => 'Content', 'control' => 'textarea' ],
-			'style'   => [ 'label' => 'Style', 'control' => 'select', 'options' => $colors ],
+			'style'   => [
+				'label'   => 'Style',
+				'control' => 'select',
+				'options' => [ [ 'blue', 'Blue' ], [ 'green', 'Green' ], [ 'red', 'Red' ], [ 'yellow', 'Yellow' ] ],
+			],
+		],
+		'insert'     => [
+			'label'    => 'Callout',
+			'template' => '<!-- wp:anchor/callout {"title":"Callout title","content":"Callout content."} /-->',
+		],
+	];
+	$forms['anchor/stats-dashboard'] = [
+		'insert' => [
+			'label'    => 'Stats Dashboard',
+			'template' => "<!-- wp:anchor/stats-dashboard {\"className\":\"wp-block-anchor-stats-dashboard\"} -->\n<!-- wp:anchor/stat-card {\"value\":\"0\",\"label\":\"Label\"} /-->\n\n<!-- wp:anchor/stat-card {\"value\":\"0\",\"label\":\"Label\",\"color\":\"green\"} /-->\n<!-- /wp:anchor/stats-dashboard -->",
 		],
 	];
 	$forms['anchor/bar-chart'] = [
 		'attributes' => [ 'title' => [ 'label' => 'Title' ] ],
+		'insert'     => [
+			'label'    => 'Bar Chart',
+			'template' => "<!-- wp:anchor/bar-chart {\"title\":\"Chart title\",\"className\":\"wp-block-anchor-bar-chart\"} -->\n<!-- wp:anchor/bar-row {\"label\":\"Category\",\"value\":\"0\",\"percent\":50} /-->\n<!-- /wp:anchor/bar-chart -->",
+		],
 	];
 	$forms['anchor/bar-row'] = [
 		'order'      => [ 'label', 'value', 'percent', 'color' ],
