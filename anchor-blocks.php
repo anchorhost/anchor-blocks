@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Anchor Blocks
  * Description: Custom blocks for Anchor Hosting blog posts — Conversation, Timeline, Callout, Stats Dashboard, Bar Chart, Report Card, Indicators of Compromise, Vector Cards, and Term List.
- * Version: 1.6.0
+ * Version: 1.7.0
  * Author: Austin Ginder
  * Author URI: https://anchor.host
  * License: MIT
@@ -10,7 +10,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'ANCHOR_BLOCKS_VERSION', '1.6.0' );
+define( 'ANCHOR_BLOCKS_VERSION', '1.7.0' );
 define( 'ANCHOR_BLOCKS_URL', plugin_dir_url( __FILE__ ) );
 define( 'ANCHOR_BLOCKS_DIR', plugin_dir_path( __FILE__ ) );
 
