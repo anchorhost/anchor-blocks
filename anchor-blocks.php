@@ -48,17 +48,29 @@ add_action( 'init', function() {
 		'style'         => 'anchor-blocks-style',
 	];
 
+	// The PHP registration is the ONLY registry server-side consumers see
+	// (REST block-types, Minn Admin's auto-insert and inspector, any headless
+	// tooling) — editor.js declarations are invisible to them. So titles,
+	// parent gating and enum choice lists are declared here and must stay in
+	// sync with editor.js; the SelectControl option lists there are the
+	// ground truth for each enum.
+
 	// Parent blocks — save handled in JS via InnerBlocks.Content
-	foreach ( [ 'anchor/conversation', 'anchor/timeline' ] as $block ) {
-		register_block_type( $block, $block_args );
-	}
+	register_block_type( 'anchor/conversation', array_merge( $block_args, [
+		'title' => 'Conversation',
+	] ) );
+	register_block_type( 'anchor/timeline', array_merge( $block_args, [
+		'title' => 'Timeline',
+	] ) );
 
 	// Parent blocks with server-rendered children — need render_callback
 	register_block_type( 'anchor/stats-dashboard', array_merge( $block_args, [
+		'title'           => 'Stats Dashboard',
 		'render_callback' => 'anchor_blocks_render_stats_dashboard',
 	] ) );
 
 	register_block_type( 'anchor/bar-chart', array_merge( $block_args, [
+		'title'           => 'Bar Chart',
 		'render_callback' => 'anchor_blocks_render_bar_chart',
 		'attributes'      => [
 			'title' => [ 'type' => 'string', 'default' => '' ],
@@ -66,6 +78,7 @@ add_action( 'init', function() {
 	] ) );
 
 	register_block_type( 'anchor/ioc-list', array_merge( $block_args, [
+		'title'           => 'Indicators of Compromise',
 		'render_callback' => 'anchor_blocks_render_ioc_list',
 		'attributes'      => [
 			'title' => [ 'type' => 'string', 'default' => 'Indicators of Compromise' ],
@@ -73,6 +86,7 @@ add_action( 'init', function() {
 	] ) );
 
 	register_block_type( 'anchor/vector-cards', array_merge( $block_args, [
+		'title'           => 'Vector Cards',
 		'render_callback' => 'anchor_blocks_render_vector_cards',
 		'attributes'      => [
 			'title' => [ 'type' => 'string', 'default' => '' ],
@@ -80,101 +94,119 @@ add_action( 'init', function() {
 	] ) );
 
 	register_block_type( 'anchor/term-list', array_merge( $block_args, [
+		'title'           => 'Term List',
 		'render_callback' => 'anchor_blocks_render_term_list',
 		'attributes'      => [
 			'title' => [ 'type' => 'string', 'default' => '' ],
 		],
 	] ) );
 
-	// Child/leaf blocks — server-side rendered to avoid validation errors
+	// Child/leaf blocks — server-side rendered to avoid validation errors.
+	// `parent` mirrors editor.js so children never offer as top-level inserts.
 	register_block_type( 'anchor/conversation-message', array_merge( $block_args, [
+		'title'           => 'Conversation Message',
+		'parent'          => [ 'anchor/conversation' ],
 		'render_callback' => 'anchor_blocks_render_conversation_message',
 		'attributes'      => [
-			'role'    => [ 'type' => 'string', 'default' => 'user' ],
+			'role'    => [ 'type' => 'string', 'default' => 'user', 'enum' => [ 'user', 'assistant' ] ],
 			'label'   => [ 'type' => 'string', 'default' => 'Austin' ],
 			'content' => [ 'type' => 'string', 'default' => '' ],
 		],
 	] ) );
 
 	register_block_type( 'anchor/timeline-item', array_merge( $block_args, [
+		'title'           => 'Timeline Item',
+		'parent'          => [ 'anchor/timeline' ],
 		'render_callback' => 'anchor_blocks_render_timeline_item',
 		'attributes'      => [
-			'color'   => [ 'type' => 'string', 'default' => 'blue' ],
 			'date'    => [ 'type' => 'string', 'default' => '' ],
 			'content' => [ 'type' => 'string', 'default' => '' ],
+			'color'   => [ 'type' => 'string', 'default' => 'blue', 'enum' => [ 'blue', 'red', 'orange', 'green' ] ],
 		],
 	] ) );
 
 	register_block_type( 'anchor/callout', array_merge( $block_args, [
+		'title'           => 'Callout',
 		'render_callback' => 'anchor_blocks_render_callout',
 		'attributes'      => [
-			'style'   => [ 'type' => 'string', 'default' => 'blue' ],
 			'title'   => [ 'type' => 'string', 'default' => '' ],
 			'content' => [ 'type' => 'string', 'default' => '' ],
+			'style'   => [ 'type' => 'string', 'default' => 'blue', 'enum' => [ 'blue', 'red', 'yellow', 'green' ] ],
 		],
 	] ) );
 
 	// Stats Dashboard — child card (server-rendered)
 	register_block_type( 'anchor/stat-card', array_merge( $block_args, [
+		'title'           => 'Stat Card',
+		'parent'          => [ 'anchor/stats-dashboard' ],
 		'render_callback' => 'anchor_blocks_render_stat_card',
 		'attributes'      => [
 			'value' => [ 'type' => 'string', 'default' => '0' ],
 			'label' => [ 'type' => 'string', 'default' => 'Label' ],
-			'color' => [ 'type' => 'string', 'default' => 'blue' ],
+			'color' => [ 'type' => 'string', 'default' => 'blue', 'enum' => [ 'blue', 'green', 'red', 'purple', 'orange' ] ],
 		],
 	] ) );
 
 	// Bar Chart — child row (server-rendered)
 	register_block_type( 'anchor/bar-row', array_merge( $block_args, [
+		'title'           => 'Bar Row',
+		'parent'          => [ 'anchor/bar-chart' ],
 		'render_callback' => 'anchor_blocks_render_bar_row',
 		'attributes'      => [
 			'label'   => [ 'type' => 'string', 'default' => 'Category' ],
 			'value'   => [ 'type' => 'string', 'default' => '0' ],
 			'percent' => [ 'type' => 'number', 'default' => 50 ],
-			'color'   => [ 'type' => 'string', 'default' => 'blue' ],
+			'color'   => [ 'type' => 'string', 'default' => 'blue', 'enum' => [ 'blue', 'green', 'red', 'purple', 'orange', 'teal', 'gray' ] ],
 		],
 	] ) );
 
 	// IOC List — child row (server-rendered)
 	register_block_type( 'anchor/ioc-row', array_merge( $block_args, [
+		'title'           => 'Indicator',
+		'parent'          => [ 'anchor/ioc-list' ],
 		'render_callback' => 'anchor_blocks_render_ioc_row',
 		'attributes'      => [
 			'label' => [ 'type' => 'string', 'default' => 'Domain' ],
-			'color' => [ 'type' => 'string', 'default' => 'red' ],
 			'value' => [ 'type' => 'string', 'default' => '' ],
 			'note'  => [ 'type' => 'string', 'default' => '' ],
+			'color' => [ 'type' => 'string', 'default' => 'red', 'enum' => [ 'red', 'orange', 'blue', 'green', 'purple', 'gray' ] ],
 		],
 	] ) );
 
 	// Vector Card — child (server-rendered)
 	register_block_type( 'anchor/vector-card', array_merge( $block_args, [
+		'title'           => 'Vector Card',
+		'parent'          => [ 'anchor/vector-cards' ],
 		'render_callback' => 'anchor_blocks_render_vector_card',
 		'attributes'      => [
 			'label'   => [ 'type' => 'string', 'default' => '' ],
-			'color'   => [ 'type' => 'string', 'default' => 'blue' ],
 			'title'   => [ 'type' => 'string', 'default' => '' ],
 			'content' => [ 'type' => 'string', 'default' => '' ],
 			'detect'  => [ 'type' => 'string', 'default' => '' ],
+			'color'   => [ 'type' => 'string', 'default' => 'blue', 'enum' => [ 'blue', 'red', 'orange', 'purple', 'green', 'gray' ] ],
 		],
 	] ) );
 
 	// Term — child (server-rendered)
 	register_block_type( 'anchor/term', array_merge( $block_args, [
+		'title'           => 'Term',
+		'parent'          => [ 'anchor/term-list' ],
 		'render_callback' => 'anchor_blocks_render_term',
 		'attributes'      => [
 			'label'   => [ 'type' => 'string', 'default' => '' ],
-			'color'   => [ 'type' => 'string', 'default' => 'blue' ],
 			'title'   => [ 'type' => 'string', 'default' => '' ],
 			'content' => [ 'type' => 'string', 'default' => '' ],
+			'color'   => [ 'type' => 'string', 'default' => 'blue', 'enum' => [ 'blue', 'red', 'orange', 'purple', 'green', 'gray' ] ],
 		],
 	] ) );
 
 	// Report Card — server-rendered with InnerBlocks
 	register_block_type( 'anchor/report-card', array_merge( $block_args, [
+		'title'           => 'Report Card',
 		'render_callback' => 'anchor_blocks_render_report_card',
 		'attributes'      => [
 			'tag'      => [ 'type' => 'string', 'default' => '' ],
-			'tagColor' => [ 'type' => 'string', 'default' => 'blue' ],
+			'tagColor' => [ 'type' => 'string', 'default' => 'blue', 'enum' => [ 'blue', 'green', 'red', 'purple', 'orange', 'gray' ] ],
 			'title'    => [ 'type' => 'string', 'default' => '' ],
 			'count'    => [ 'type' => 'string', 'default' => '' ],
 		],
@@ -182,6 +214,7 @@ add_action( 'init', function() {
 
 	// Data Table — single server-rendered block (data lives in attributes)
 	register_block_type( 'anchor/data-table', array_merge( $block_args, [
+		'title'           => 'Data Table',
 		'render_callback' => 'anchor_blocks_render_data_table',
 		'attributes'      => [
 			'title'     => [ 'type' => 'string', 'default' => '' ],
