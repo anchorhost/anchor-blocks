@@ -2,6 +2,53 @@
    Anchor Blocks — Editor-only Styles
    ========================================================================== */
 
+/* The editor canvas is always light, whatever the OS colour scheme says.
+   style.css switches its tokens on prefers-color-scheme for the front end;
+   this file loads after it (declared as a dependency), so re-pinning the
+   light values here keeps the editing surface matched to the admin chrome
+   around it. Same specificity, later in source order — this wins. */
+:root {
+	--ab-surface: #ffffff;
+	--ab-surface-2: #f8fafc;
+	--ab-surface-3: #edf2f7;
+	--ab-border: #e4e9f0;
+	--ab-text: #1a2744;
+	--ab-body: #2d3f52;
+	--ab-muted: #6b7f94;
+
+	--ab-shadow: 0 1px 3px rgba(26, 39, 68, .06), 0 1px 2px rgba(26, 39, 68, .04);
+	--ab-shadow-lg: 0 4px 12px rgba(26, 39, 68, .08), 0 1px 3px rgba(26, 39, 68, .06);
+
+	--ab-anchor-text: #2b8fc7;
+	--ab-header-bg: #1a2744;
+
+	--ab-t-blue: #2b8fc7;
+	--ab-t-red: #dc2626;
+	--ab-t-orange: #d97706;
+	--ab-t-green: #16a34a;
+	--ab-t-purple: #8b5cf6;
+	--ab-t-gray: #6b7280;
+
+	--ab-tone-red-bg: #fef2f2;
+	--ab-tone-red-border: #fecaca;
+	--ab-tone-red-text: #991b1b;
+
+	--ab-tone-blue-bg: #eff6ff;
+	--ab-tone-blue-border: #bfdbfe;
+	--ab-tone-blue-text: #1e40af;
+
+	--ab-tone-yellow-bg: #fffbeb;
+	--ab-tone-yellow-border: #fde68a;
+	--ab-tone-yellow-text: #92400e;
+
+	--ab-tone-green-bg: #f0fdf4;
+	--ab-tone-green-border: #bbf7d0;
+	--ab-tone-green-text: #166534;
+
+	--ab-tone-orange-bg: #fff7ed;
+	--ab-tone-orange-text: #ea580c;
+}
+
 /* ── Conversation Block ── */
 
 .wp-block-anchor-conversation {

@@ -1,22 +1,180 @@
 /* ==========================================================================
    Anchor Blocks — Frontend + Editor Styles
+
+   Colour model
+   ------------
+   Every surface, border and text colour is a token. Each token reads the
+   host theme's variable first and falls back to its own value:
+
+       --ab-surface: var(--surface, #ffffff);
+
+   So on a theme that publishes --surface / --text / --border (Anchor Theme
+   does), the blocks adopt the theme's palette automatically and follow its
+   light/dark switching. On any other theme the fallback applies and the
+   blocks look exactly as they always have.
+
+   The dark block below only changes the FALLBACKS plus the tinted tones and
+   text-accents, which cannot be derived from a theme variable. A theme value,
+   when present, still wins.
    ========================================================================== */
 
 :root {
-	--ab-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+	--ab-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
 	--ab-radius: 12px;
-	--ab-border: #e4e9f0;
-	--ab-muted: #6b7f94;
-	--ab-text: #1a2744;
+
+	/* Surfaces, borders and text — inherited from the theme when available. */
+	--ab-surface: var(--surface, #ffffff);
+	--ab-surface-2: var(--surface-2, #f8fafc);
+	--ab-surface-3: var(--surface-3, #edf2f7);
+	--ab-border: var(--border, #e4e9f0);
+	--ab-text: var(--text, #1a2744);
+	--ab-body: var(--text-2, #2d3f52);
+	--ab-muted: var(--text-3, #6b7f94);
+
+	--ab-shadow: 0 1px 3px rgba(26, 39, 68, .06), 0 1px 2px rgba(26, 39, 68, .04);
+	--ab-shadow-lg: 0 4px 12px rgba(26, 39, 68, .08), 0 1px 3px rgba(26, 39, 68, .06);
+
+	/* Brand accent. Cyan reads well on the dark conversation header; the
+	   -text variant is the contrast-safe version for type on a light surface. */
 	--ab-anchor: #55c1e7;
-	--ab-anchor-dark: #1a2744;
-	--ab-shadow: 0 1px 3px rgba(26,39,68,0.06), 0 1px 2px rgba(26,39,68,0.04);
+	--ab-anchor-text: #2b8fc7;
+
+	--ab-header-bg: #1a2744;
+	--ab-header-fg: #ffffff;
+	--ab-on-accent: #ffffff;
+
+	/* Solid accent fills — chips, bars, dots. White type sits on these, so
+	   they stay saturated in both schemes. */
+	--ab-c-blue: #2b8fc7;
+	--ab-c-indigo: #2563eb;
+	--ab-c-red: #dc2626;
+	--ab-c-orange: #d97706;
+	--ab-c-green: #16a34a;
+	--ab-c-purple: #8b5cf6;
+	--ab-c-teal: #0e8a8a;
+	--ab-c-gray: #6b7280;
+
+	/* Accent used as TYPE on a surface — lightened in dark. */
+	--ab-t-blue: #2b8fc7;
+	--ab-t-red: #dc2626;
+	--ab-t-orange: #d97706;
+	--ab-t-green: #16a34a;
+	--ab-t-purple: #8b5cf6;
+	--ab-t-gray: #6b7280;
+
+	/* Tinted tones — callouts, badges, the detect pill. */
+	--ab-tone-red-bg: #fef2f2;
+	--ab-tone-red-border: #fecaca;
+	--ab-tone-red-text: #991b1b;
+
+	--ab-tone-blue-bg: #eff6ff;
+	--ab-tone-blue-border: #bfdbfe;
+	--ab-tone-blue-text: #1e40af;
+
+	--ab-tone-yellow-bg: #fffbeb;
+	--ab-tone-yellow-border: #fde68a;
+	--ab-tone-yellow-text: #92400e;
+
+	--ab-tone-green-bg: #f0fdf4;
+	--ab-tone-green-border: #bbf7d0;
+	--ab-tone-green-text: #166534;
+
+	--ab-tone-orange-bg: #fff7ed;
+	--ab-tone-orange-text: #ea580c;
+}
+
+/* Dark scheme. Applied on OS preference unless the page has explicitly opted
+   into light, and always when the page has explicitly opted into dark. */
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		--ab-surface: var(--surface, #141922);
+		--ab-surface-2: var(--surface-2, #1a202b);
+		--ab-surface-3: var(--surface-3, #212936);
+		--ab-border: var(--border, #242c39);
+		--ab-text: var(--text, #e9ecf1);
+		--ab-body: var(--text-2, #a3acb9);
+		--ab-muted: var(--text-3, #6e7885);
+
+		--ab-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+		--ab-shadow-lg: 0 4px 14px rgba(0, 0, 0, .55);
+
+		--ab-anchor-text: #5cb3e8;
+		--ab-header-bg: var(--surface-3, #212936);
+
+		--ab-t-blue: #5cb3e8;
+		--ab-t-red: #ee7264;
+		--ab-t-orange: #e0a64a;
+		--ab-t-green: #3fbe7f;
+		--ab-t-purple: #a78bfa;
+		--ab-t-gray: #8b95a3;
+
+		--ab-tone-red-bg: rgba(238, 114, 100, .12);
+		--ab-tone-red-border: rgba(238, 114, 100, .32);
+		--ab-tone-red-text: #f2a49a;
+
+		--ab-tone-blue-bg: rgba(92, 151, 247, .12);
+		--ab-tone-blue-border: rgba(92, 151, 247, .32);
+		--ab-tone-blue-text: #9dc0ff;
+
+		--ab-tone-yellow-bg: rgba(224, 166, 74, .12);
+		--ab-tone-yellow-border: rgba(224, 166, 74, .32);
+		--ab-tone-yellow-text: #e8be7e;
+
+		--ab-tone-green-bg: rgba(63, 190, 127, .12);
+		--ab-tone-green-border: rgba(63, 190, 127, .32);
+		--ab-tone-green-text: #7fd6a8;
+
+		--ab-tone-orange-bg: rgba(224, 166, 74, .12);
+		--ab-tone-orange-text: #e8be7e;
+	}
+}
+
+html[data-theme="dark"] {
+	--ab-surface: var(--surface, #141922);
+	--ab-surface-2: var(--surface-2, #1a202b);
+	--ab-surface-3: var(--surface-3, #212936);
+	--ab-border: var(--border, #242c39);
+	--ab-text: var(--text, #e9ecf1);
+	--ab-body: var(--text-2, #a3acb9);
+	--ab-muted: var(--text-3, #6e7885);
+
+	--ab-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+	--ab-shadow-lg: 0 4px 14px rgba(0, 0, 0, .55);
+
+	--ab-anchor-text: #5cb3e8;
+	--ab-header-bg: var(--surface-3, #212936);
+
+	--ab-t-blue: #5cb3e8;
+	--ab-t-red: #ee7264;
+	--ab-t-orange: #e0a64a;
+	--ab-t-green: #3fbe7f;
+	--ab-t-purple: #a78bfa;
+	--ab-t-gray: #8b95a3;
+
+	--ab-tone-red-bg: rgba(238, 114, 100, .12);
+	--ab-tone-red-border: rgba(238, 114, 100, .32);
+	--ab-tone-red-text: #f2a49a;
+
+	--ab-tone-blue-bg: rgba(92, 151, 247, .12);
+	--ab-tone-blue-border: rgba(92, 151, 247, .32);
+	--ab-tone-blue-text: #9dc0ff;
+
+	--ab-tone-yellow-bg: rgba(224, 166, 74, .12);
+	--ab-tone-yellow-border: rgba(224, 166, 74, .32);
+	--ab-tone-yellow-text: #e8be7e;
+
+	--ab-tone-green-bg: rgba(63, 190, 127, .12);
+	--ab-tone-green-border: rgba(63, 190, 127, .32);
+	--ab-tone-green-text: #7fd6a8;
+
+	--ab-tone-orange-bg: rgba(224, 166, 74, .12);
+	--ab-tone-orange-text: #e8be7e;
 }
 
 /* ── Conversation Block ── */
 
 .wp-block-anchor-conversation {
-	background: #fff;
+	background: var(--ab-surface);
 	border-radius: var(--ab-radius);
 	overflow: hidden;
 	box-shadow: var(--ab-shadow);
@@ -24,8 +182,8 @@
 }
 
 .wp-block-anchor-conversation .ab-conv-header {
-	background: var(--ab-anchor-dark);
-	color: #fff;
+	background: var(--ab-header-bg);
+	color: var(--ab-header-fg);
 	padding: 0.6rem 1.25rem;
 	font-size: 0.78rem;
 	font-weight: 600;
@@ -50,7 +208,7 @@
 	border-bottom: 1px solid var(--ab-border);
 	font-size: 0.9rem;
 	line-height: 1.65;
-	color: #2d3f52;
+	color: var(--ab-body);
 }
 
 .wp-block-anchor-conversation-message:last-child {
@@ -58,11 +216,11 @@
 }
 
 .wp-block-anchor-conversation-message.is-role-user {
-	background: #f8fafc;
+	background: var(--ab-surface-2);
 }
 
 .wp-block-anchor-conversation-message.is-role-assistant {
-	background: #fff;
+	background: var(--ab-surface);
 }
 
 .wp-block-anchor-conversation-message .ab-msg-label {
@@ -78,11 +236,11 @@
 }
 
 .wp-block-anchor-conversation-message.is-role-user .ab-msg-label {
-	color: var(--ab-anchor);
+	color: var(--ab-anchor-text);
 }
 
 .wp-block-anchor-conversation-message.is-role-assistant .ab-msg-label {
-	color: #9333ea;
+	color: var(--ab-t-purple);
 }
 
 .wp-block-anchor-conversation-message .ab-msg-content {
@@ -93,7 +251,8 @@
 .wp-block-anchor-conversation-message .ab-msg-content code {
 	font-family: var(--ab-mono);
 	font-size: 0.85em;
-	background: #edf2f7;
+	background: var(--ab-surface-3);
+	color: var(--ab-text);
 	padding: 2px 6px;
 	border-radius: 4px;
 }
@@ -132,14 +291,14 @@
 	height: 12px;
 	border-radius: 50%;
 	background: var(--ab-anchor);
-	border: 2px solid #fff;
+	border: 2px solid var(--ab-surface);
 	box-shadow: 0 0 0 2px var(--ab-border);
 }
 
-.wp-block-anchor-timeline-item.is-color-red::before    { background: #dc2626; }
-.wp-block-anchor-timeline-item.is-color-orange::before { background: #ea580c; }
-.wp-block-anchor-timeline-item.is-color-green::before  { background: #16a34a; }
-.wp-block-anchor-timeline-item.is-color-blue::before   { background: #2563eb; }
+.wp-block-anchor-timeline-item.is-color-red::before    { background: var(--ab-c-red); }
+.wp-block-anchor-timeline-item.is-color-orange::before { background: var(--ab-c-orange); }
+.wp-block-anchor-timeline-item.is-color-green::before  { background: var(--ab-c-green); }
+.wp-block-anchor-timeline-item.is-color-blue::before   { background: var(--ab-c-indigo); }
 
 .wp-block-anchor-timeline-item .ab-tl-date {
 	font-family: var(--ab-mono);
@@ -150,7 +309,7 @@
 
 .wp-block-anchor-timeline-item .ab-tl-text {
 	font-size: 0.95rem;
-	color: #2d3f52;
+	color: var(--ab-body);
 	line-height: 1.6;
 }
 
@@ -161,7 +320,8 @@
 .wp-block-anchor-timeline-item .ab-tl-text code {
 	font-family: var(--ab-mono);
 	font-size: 0.85em;
-	background: #edf2f7;
+	background: var(--ab-surface-3);
+	color: var(--ab-text);
 	padding: 2px 6px;
 	border-radius: 4px;
 }
@@ -182,27 +342,27 @@
 }
 
 .wp-block-anchor-callout.is-style-red {
-	background: #fef2f2;
-	border: 1px solid #fecaca;
-	color: #991b1b;
+	background: var(--ab-tone-red-bg);
+	border: 1px solid var(--ab-tone-red-border);
+	color: var(--ab-tone-red-text);
 }
 
 .wp-block-anchor-callout.is-style-blue {
-	background: #eff6ff;
-	border: 1px solid #bfdbfe;
-	color: #1e40af;
+	background: var(--ab-tone-blue-bg);
+	border: 1px solid var(--ab-tone-blue-border);
+	color: var(--ab-tone-blue-text);
 }
 
 .wp-block-anchor-callout.is-style-yellow {
-	background: #fffbeb;
-	border: 1px solid #fde68a;
-	color: #92400e;
+	background: var(--ab-tone-yellow-bg);
+	border: 1px solid var(--ab-tone-yellow-border);
+	color: var(--ab-tone-yellow-text);
 }
 
 .wp-block-anchor-callout.is-style-green {
-	background: #f0fdf4;
-	border: 1px solid #bbf7d0;
-	color: #166534;
+	background: var(--ab-tone-green-bg);
+	border: 1px solid var(--ab-tone-green-border);
+	color: var(--ab-tone-green-text);
 }
 
 /* ── Badge (for use in tables and inline) ── */
@@ -218,10 +378,10 @@
 	letter-spacing: 0.03em;
 }
 
-.badge.red    { background: #fef2f2; color: #dc2626; }
-.badge.orange { background: #fff7ed; color: #ea580c; }
-.badge.green  { background: #dcfce7; color: #16a34a; }
-.badge.blue   { background: #eff6ff; color: #2563eb; }
+.badge.red    { background: var(--ab-tone-red-bg);    color: var(--ab-t-red); }
+.badge.orange { background: var(--ab-tone-orange-bg); color: var(--ab-tone-orange-text); }
+.badge.green  { background: var(--ab-tone-green-bg);  color: var(--ab-t-green); }
+.badge.blue   { background: var(--ab-tone-blue-bg);   color: var(--ab-t-blue); }
 
 /* ── Stats Dashboard Block ── */
 
@@ -245,14 +405,14 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 /* ── Stat Card Block ── */
 
 .wp-block-anchor-stat-card {
-	background: #fff;
+	background: var(--ab-surface);
 	border-radius: var(--ab-radius);
 	padding: 1.5rem 1.15rem 1.25rem;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	text-align: center;
-	box-shadow: 0 4px 12px rgba(26,39,68,0.08), 0 1px 3px rgba(26,39,68,0.06);
+	box-shadow: var(--ab-shadow-lg);
 	transition: transform 0.15s ease;
 }
 
@@ -274,16 +434,16 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 	font-weight: 500;
 }
 
-.wp-block-anchor-stat-card.is-color-blue .ab-stat-value   { color: #2b8fc7; }
-.wp-block-anchor-stat-card.is-color-green .ab-stat-value  { color: #16a34a; }
-.wp-block-anchor-stat-card.is-color-red .ab-stat-value    { color: #dc2626; }
-.wp-block-anchor-stat-card.is-color-purple .ab-stat-value { color: #8b5cf6; }
-.wp-block-anchor-stat-card.is-color-orange .ab-stat-value { color: #d97706; }
+.wp-block-anchor-stat-card.is-color-blue .ab-stat-value   { color: var(--ab-t-blue); }
+.wp-block-anchor-stat-card.is-color-green .ab-stat-value  { color: var(--ab-t-green); }
+.wp-block-anchor-stat-card.is-color-red .ab-stat-value    { color: var(--ab-t-red); }
+.wp-block-anchor-stat-card.is-color-purple .ab-stat-value { color: var(--ab-t-purple); }
+.wp-block-anchor-stat-card.is-color-orange .ab-stat-value { color: var(--ab-t-orange); }
 
 /* ── Bar Chart Block ── */
 
 .wp-block-anchor-bar-chart {
-	background: #fff;
+	background: var(--ab-surface);
 	border-radius: var(--ab-radius);
 	padding: 1.5rem;
 	margin: 1.5rem 0;
@@ -293,6 +453,7 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 .wp-block-anchor-bar-chart .ab-chart-title {
 	font-size: 0.85rem;
 	font-weight: 650;
+	color: var(--ab-text);
 	margin-bottom: 1rem;
 }
 
@@ -319,7 +480,7 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 .wp-block-anchor-bar-row .ab-bar-track {
 	flex: 1;
 	height: 24px;
-	background: #f5f7fa;
+	background: var(--ab-surface-3);
 	border-radius: 6px;
 	overflow: hidden;
 }
@@ -333,22 +494,22 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 	font-family: var(--ab-mono);
 	font-size: 0.68rem;
 	font-weight: 700;
-	color: #fff;
+	color: var(--ab-on-accent);
 	min-width: fit-content;
 }
 
-.ab-bar-fill.is-color-blue   { background: #2b8fc7; }
-.ab-bar-fill.is-color-green  { background: #16a34a; }
-.ab-bar-fill.is-color-red    { background: #dc2626; }
-.ab-bar-fill.is-color-purple { background: #8b5cf6; }
-.ab-bar-fill.is-color-orange { background: #d97706; }
-.ab-bar-fill.is-color-teal   { background: #0e8a8a; }
-.ab-bar-fill.is-color-gray   { background: #6b7280; }
+.ab-bar-fill.is-color-blue   { background: var(--ab-c-blue); }
+.ab-bar-fill.is-color-green  { background: var(--ab-c-green); }
+.ab-bar-fill.is-color-red    { background: var(--ab-c-red); }
+.ab-bar-fill.is-color-purple { background: var(--ab-c-purple); }
+.ab-bar-fill.is-color-orange { background: var(--ab-c-orange); }
+.ab-bar-fill.is-color-teal   { background: var(--ab-c-teal); }
+.ab-bar-fill.is-color-gray   { background: var(--ab-c-gray); }
 
 /* ── Data Table Block ── */
 
 .wp-block-anchor-data-table {
-	background: #fff;
+	background: var(--ab-surface);
 	border-radius: var(--ab-radius);
 	padding: 1.5rem;
 	margin: 1.5rem 0;
@@ -358,6 +519,7 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 .wp-block-anchor-data-table .ab-dt-title {
 	font-size: 0.85rem;
 	font-weight: 650;
+	color: var(--ab-text);
 	margin-bottom: 1rem;
 }
 
@@ -374,14 +536,14 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 	letter-spacing: 0.03em;
 	color: var(--ab-muted);
 	padding: 0.55rem 0.9rem;
-	border-bottom: 2px solid #1a2744;
+	border-bottom: 2px solid var(--ab-text);
 	white-space: nowrap;
 }
 
 .wp-block-anchor-data-table .ab-dt-td {
 	font-family: var(--ab-mono);
 	font-size: 0.82rem;
-	color: #2d3f52;
+	color: var(--ab-body);
 	padding: 0.5rem 0.9rem;
 	border-bottom: 1px solid var(--ab-border);
 }
@@ -391,12 +553,12 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 }
 
 .wp-block-anchor-data-table .ab-dt-tr.is-highlight {
-	background: #f8fafc;
+	background: var(--ab-surface-2);
 }
 
 .wp-block-anchor-data-table .ab-dt-tr.is-highlight .ab-dt-td {
 	font-weight: 700;
-	color: #1a2744;
+	color: var(--ab-text);
 }
 
 .wp-block-anchor-data-table .align-left   { text-align: left; }
@@ -406,7 +568,7 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 /* ── Report Card Block ── */
 
 .wp-block-anchor-report-card {
-	background: #fff;
+	background: var(--ab-surface);
 	border-radius: var(--ab-radius);
 	padding: 1.25rem 1.35rem;
 	margin-bottom: 0.65rem;
@@ -414,7 +576,7 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 }
 
 .wp-block-anchor-report-card:hover {
-	box-shadow: 0 4px 12px rgba(26,39,68,0.08), 0 1px 3px rgba(26,39,68,0.06);
+	box-shadow: var(--ab-shadow-lg);
 }
 
 .wp-block-anchor-report-card .ab-rc-header {
@@ -433,20 +595,21 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 	letter-spacing: 0.04em;
 	padding: 3px 8px;
 	border-radius: 6px;
-	color: #fff;
+	color: var(--ab-on-accent);
 	white-space: nowrap;
 }
 
-.ab-rc-tag.is-color-blue   { background: #2b8fc7; }
-.ab-rc-tag.is-color-green  { background: #16a34a; }
-.ab-rc-tag.is-color-red    { background: #dc2626; }
-.ab-rc-tag.is-color-purple { background: #8b5cf6; }
-.ab-rc-tag.is-color-orange { background: #d97706; }
-.ab-rc-tag.is-color-gray   { background: #6b7280; }
+.ab-rc-tag.is-color-blue   { background: var(--ab-c-blue); }
+.ab-rc-tag.is-color-green  { background: var(--ab-c-green); }
+.ab-rc-tag.is-color-red    { background: var(--ab-c-red); }
+.ab-rc-tag.is-color-purple { background: var(--ab-c-purple); }
+.ab-rc-tag.is-color-orange { background: var(--ab-c-orange); }
+.ab-rc-tag.is-color-gray   { background: var(--ab-c-gray); }
 
 .wp-block-anchor-report-card .ab-rc-title {
 	font-size: 0.95rem;
 	font-weight: 650;
+	color: var(--ab-text);
 }
 
 .wp-block-anchor-report-card .ab-rc-count {
@@ -455,7 +618,7 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 	font-weight: 600;
 	padding: 2px 8px;
 	border-radius: 6px;
-	background: #f5f7fa;
+	background: var(--ab-surface-3);
 	color: var(--ab-muted);
 	margin-left: auto;
 	white-space: nowrap;
@@ -463,7 +626,7 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 
 .wp-block-anchor-report-card .ab-rc-body {
 	font-size: 0.88rem;
-	color: #3d5166;
+	color: var(--ab-body);
 }
 
 .wp-block-anchor-report-card .ab-rc-body p {
@@ -478,7 +641,7 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 .wp-block-anchor-report-card .ab-rc-body li {
 	font-size: 0.86rem;
 	margin-bottom: 0.3rem;
-	color: #3d5166;
+	color: var(--ab-body);
 }
 
 .wp-block-anchor-report-card .ab-rc-body li strong {
@@ -489,7 +652,8 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 .wp-block-anchor-report-card .ab-rc-body code {
 	font-family: var(--ab-mono);
 	font-size: 0.8em;
-	background: #f5f7fa;
+	background: var(--ab-surface-3);
+	color: var(--ab-text);
 	padding: 2px 6px;
 	border-radius: 4px;
 }
@@ -519,16 +683,17 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
    IOC LIST — Indicators of Compromise
    ============================================================ */
 .wp-block-anchor-ioc-list {
-	background: #fff;
+	background: var(--ab-surface);
 	border-radius: 12px;
 	padding: 1.25rem 1.5rem;
 	margin: 1.5rem 0;
-	box-shadow: 0 1px 3px rgba(26,39,68,0.06);
+	box-shadow: var(--ab-shadow);
 }
 
 .wp-block-anchor-ioc-list .ab-ioc-title {
 	font-size: 0.85rem;
 	font-weight: 650;
+	color: var(--ab-text);
 	margin-bottom: 0.85rem;
 }
 
@@ -537,7 +702,7 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 	align-items: baseline;
 	gap: 0.75rem;
 	padding: 0.6rem 0;
-	border-bottom: 1px solid #eef2f7;
+	border-bottom: 1px solid var(--ab-border);
 	flex-wrap: wrap;
 }
 
@@ -554,24 +719,24 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 	border-radius: 6px;
 	font-size: 0.68rem;
 	font-weight: 700;
-	font-family: 'SF Mono', 'Fira Code', monospace;
+	font-family: var(--ab-mono);
 	text-transform: uppercase;
 	letter-spacing: 0.03em;
-	color: #fff;
+	color: var(--ab-on-accent);
 }
 
-.ab-ioc-type.is-color-red    { background: #dc2626; }
-.ab-ioc-type.is-color-orange { background: #d97706; }
-.ab-ioc-type.is-color-blue   { background: #2b8fc7; }
-.ab-ioc-type.is-color-green  { background: #16a34a; }
-.ab-ioc-type.is-color-purple { background: #8b5cf6; }
-.ab-ioc-type.is-color-gray   { background: #6b7280; }
+.ab-ioc-type.is-color-red    { background: var(--ab-c-red); }
+.ab-ioc-type.is-color-orange { background: var(--ab-c-orange); }
+.ab-ioc-type.is-color-blue   { background: var(--ab-c-blue); }
+.ab-ioc-type.is-color-green  { background: var(--ab-c-green); }
+.ab-ioc-type.is-color-purple { background: var(--ab-c-purple); }
+.ab-ioc-type.is-color-gray   { background: var(--ab-c-gray); }
 
 .ab-ioc-value {
-	font-family: 'SF Mono', 'Fira Code', monospace;
+	font-family: var(--ab-mono);
 	font-size: 0.82rem;
-	color: #1a2744;
-	background: #f5f8fb;
+	color: var(--ab-text);
+	background: var(--ab-surface-3);
 	padding: 2px 7px;
 	border-radius: 5px;
 	word-break: break-all;
@@ -580,14 +745,15 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 .ab-ioc-note {
 	flex: 1 1 12rem;
 	font-size: 0.82rem;
-	color: #6b7f94;
+	color: var(--ab-muted);
 	line-height: 1.5;
 }
 
 .ab-ioc-note code {
-	font-family: 'SF Mono', 'Fira Code', monospace;
+	font-family: var(--ab-mono);
 	font-size: 0.92em;
-	background: #f5f8fb;
+	background: var(--ab-surface-3);
+	color: var(--ab-text);
 	padding: 1px 5px;
 	border-radius: 4px;
 }
@@ -602,6 +768,7 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 .wp-block-anchor-vector-cards .ab-vc-heading {
 	font-size: 0.85rem;
 	font-weight: 650;
+	color: var(--ab-text);
 	margin-bottom: 1rem;
 }
 
@@ -624,21 +791,21 @@ body:not(.wp-admin) .wp-block-anchor-vector-cards .ab-vc-heading {
 }
 
 .wp-block-anchor-vector-card {
-	background: #fff;
+	background: var(--ab-surface);
 	border-radius: var(--ab-radius);
-	border-top: 3px solid #2b8fc7;
+	border-top: 3px solid var(--ab-c-blue);
 	padding: 1.2rem 1.3rem;
 	box-shadow: var(--ab-shadow);
 	display: flex;
 	flex-direction: column;
 }
 
-.wp-block-anchor-vector-card.is-color-blue   { border-top-color: #2b8fc7; }
-.wp-block-anchor-vector-card.is-color-red    { border-top-color: #dc2626; }
-.wp-block-anchor-vector-card.is-color-orange { border-top-color: #d97706; }
-.wp-block-anchor-vector-card.is-color-purple { border-top-color: #8b5cf6; }
-.wp-block-anchor-vector-card.is-color-green  { border-top-color: #16a34a; }
-.wp-block-anchor-vector-card.is-color-gray   { border-top-color: #6b7280; }
+.wp-block-anchor-vector-card.is-color-blue   { border-top-color: var(--ab-c-blue); }
+.wp-block-anchor-vector-card.is-color-red    { border-top-color: var(--ab-c-red); }
+.wp-block-anchor-vector-card.is-color-orange { border-top-color: var(--ab-c-orange); }
+.wp-block-anchor-vector-card.is-color-purple { border-top-color: var(--ab-c-purple); }
+.wp-block-anchor-vector-card.is-color-green  { border-top-color: var(--ab-c-green); }
+.wp-block-anchor-vector-card.is-color-gray   { border-top-color: var(--ab-c-gray); }
 
 .wp-block-anchor-vector-card .ab-vc-head {
 	margin-bottom: 0.6rem;
@@ -653,16 +820,16 @@ body:not(.wp-admin) .wp-block-anchor-vector-cards .ab-vc-heading {
 	letter-spacing: 0.05em;
 	padding: 3px 8px;
 	border-radius: 6px;
-	color: #fff;
+	color: var(--ab-on-accent);
 	margin-bottom: 0.5rem;
 }
 
-.ab-vc-label.is-color-blue   { background: #2b8fc7; }
-.ab-vc-label.is-color-red    { background: #dc2626; }
-.ab-vc-label.is-color-orange { background: #d97706; }
-.ab-vc-label.is-color-purple { background: #8b5cf6; }
-.ab-vc-label.is-color-green  { background: #16a34a; }
-.ab-vc-label.is-color-gray   { background: #6b7280; }
+.ab-vc-label.is-color-blue   { background: var(--ab-c-blue); }
+.ab-vc-label.is-color-red    { background: var(--ab-c-red); }
+.ab-vc-label.is-color-orange { background: var(--ab-c-orange); }
+.ab-vc-label.is-color-purple { background: var(--ab-c-purple); }
+.ab-vc-label.is-color-green  { background: var(--ab-c-green); }
+.ab-vc-label.is-color-gray   { background: var(--ab-c-gray); }
 
 .wp-block-anchor-vector-card .ab-vc-title {
 	font-size: 1rem;
@@ -673,7 +840,7 @@ body:not(.wp-admin) .wp-block-anchor-vector-cards .ab-vc-heading {
 
 .wp-block-anchor-vector-card .ab-vc-body {
 	font-size: 0.86rem;
-	color: #3d5166;
+	color: var(--ab-body);
 	line-height: 1.6;
 	flex: 1;
 }
@@ -682,7 +849,8 @@ body:not(.wp-admin) .wp-block-anchor-vector-cards .ab-vc-heading {
 .wp-block-anchor-vector-card .ab-vc-detect code {
 	font-family: var(--ab-mono);
 	font-size: 0.85em;
-	background: #f5f7fa;
+	background: var(--ab-surface-3);
+	color: var(--ab-text);
 	padding: 2px 6px;
 	border-radius: 4px;
 	word-break: break-word;
@@ -707,9 +875,9 @@ body:not(.wp-admin) .wp-block-anchor-vector-cards .ab-vc-heading {
 	font-weight: 700;
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
-	color: #16a34a;
-	background: #f0fdf4;
-	border: 1px solid #bbf7d0;
+	color: var(--ab-tone-green-text);
+	background: var(--ab-tone-green-bg);
+	border: 1px solid var(--ab-tone-green-border);
 	padding: 1px 6px;
 	border-radius: 5px;
 }
@@ -717,7 +885,7 @@ body:not(.wp-admin) .wp-block-anchor-vector-cards .ab-vc-heading {
 /* ── Term List Block ── */
 
 .wp-block-anchor-term-list {
-	background: #fff;
+	background: var(--ab-surface);
 	border-radius: var(--ab-radius);
 	padding: 0.4rem 2rem;
 	margin: 1.5rem 0;
@@ -748,12 +916,12 @@ body:not(.wp-admin) .wp-block-anchor-vector-cards .ab-vc-heading {
 	margin-bottom: 0.65rem;
 }
 
-.ab-term-label.is-color-blue   { color: #2b8fc7; }
-.ab-term-label.is-color-red    { color: #dc2626; }
-.ab-term-label.is-color-orange { color: #d97706; }
-.ab-term-label.is-color-purple { color: #8b5cf6; }
-.ab-term-label.is-color-green  { color: #16a34a; }
-.ab-term-label.is-color-gray   { color: #6b7280; }
+.ab-term-label.is-color-blue   { color: var(--ab-t-blue); }
+.ab-term-label.is-color-red    { color: var(--ab-t-red); }
+.ab-term-label.is-color-orange { color: var(--ab-t-orange); }
+.ab-term-label.is-color-purple { color: var(--ab-t-purple); }
+.ab-term-label.is-color-green  { color: var(--ab-t-green); }
+.ab-term-label.is-color-gray   { color: var(--ab-t-gray); }
 
 .wp-block-anchor-term .ab-term-title {
 	font-size: 1rem;
@@ -765,14 +933,15 @@ body:not(.wp-admin) .wp-block-anchor-vector-cards .ab-vc-heading {
 
 .wp-block-anchor-term .ab-term-body {
 	font-size: 0.9rem;
-	color: #3d5166;
+	color: var(--ab-body);
 	line-height: 1.7;
 }
 
 .wp-block-anchor-term .ab-term-body code {
 	font-family: var(--ab-mono);
 	font-size: 0.85em;
-	background: #f5f7fa;
+	background: var(--ab-surface-3);
+	color: var(--ab-text);
 	padding: 2px 6px;
 	border-radius: 4px;
 }

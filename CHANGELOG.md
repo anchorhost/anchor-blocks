@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Dark mode across all 14 blocks. Every surface, border and text colour is now a token instead of a hardcoded hex, and each token reads the host theme's variable first (`--ab-surface: var(--surface, #fff)`), so blocks adopt the theme's palette and follow its light/dark switching. On a theme that publishes no such variables the fallbacks apply and rendering is unchanged
+- Blocks are self-sufficient in dark mode: a `prefers-color-scheme: dark` block plus an `html[data-theme="dark"]` override supply dark fallbacks, tinted callout/badge tones and lightened text-accents, so dark mode works even without a cooperating theme
+- The editor canvas is pinned to the light palette in `editor.css` (loaded after `style.css`), so an author on a dark-mode OS still edits against the light admin chrome
+- Contrast fix: the user-message label in Conversation now uses `--ab-anchor-text` (#2b8fc7) rather than the brand cyan #55c1e7, which failed contrast on a light surface
+
 ## 1.7.0 — 2026-07-04
 
 - Minn Admin integration (`app/MinnAdmin.php`): block-inspector form descriptors for all 13 blocks via the `minn_admin_block_forms` filter — friendly labels, a User/Assistant role select, textarea controls, real color palettes (callout: blue/green/red/yellow), and an editable conversation header (`wrapperText`). Slash-menu insert templates for Conversation, Timeline, Callout, Stats Dashboard and Bar Chart. A no-op when Minn Admin isn't installed
