@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.1 — 2026-08-22
+
+- Timeline: pin `box-sizing: border-box` on the item dot pseudo-element. Themes whose reset targets only `*` (which never matches pseudo-elements) rendered the 12px dot as 16px including its ring border, centering it 2px right of the rail
+
 ## 1.8.0 — 2026-08-22
 
 - Dark mode across all 14 blocks. Every surface, border and text colour is now a token instead of a hardcoded hex, and each token reads the host theme's variable first (`--ab-surface: var(--surface, #fff)`), so blocks adopt the theme's palette and follow its light/dark switching. On a theme that publishes no such variables the fallbacks apply and rendering is unchanged

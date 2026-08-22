@@ -284,6 +284,10 @@ html[data-theme="dark"] {
 
 .wp-block-anchor-timeline-item::before {
 	content: '';
+	/* `*` box-sizing resets don't match pseudo-elements, so pin the box
+	   model here — the 12px must include the 2px ring border or the dot
+	   centers 2px right of the rail. */
+	box-sizing: border-box;
 	position: absolute;
 	left: calc(-2rem + 2px);
 	top: 6px;
