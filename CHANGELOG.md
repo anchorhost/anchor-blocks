@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.8.0 — 2026-08-22
 
 - Dark mode across all 14 blocks. Every surface, border and text colour is now a token instead of a hardcoded hex, and each token reads the host theme's variable first (`--ab-surface: var(--surface, #fff)`), so blocks adopt the theme's palette and follow its light/dark switching. On a theme that publishes no such variables the fallbacks apply and rendering is unchanged
 - Blocks are self-sufficient in dark mode: a `prefers-color-scheme: dark` block plus an `html[data-theme="dark"]` override supply dark fallbacks, tinted callout/badge tones and lightened text-accents, so dark mode works even without a cooperating theme
