@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.0 — 2026-10-23
+
+- New Canvas block (`anchor/canvas`) for custom coded areas in posts. HTML/SVG, CSS and optional JS live in attributes and render into a declarative shadow root, so the code's styles cannot leak into the page or the page's into it, while inherited tokens (`--ab-*` and the theme's variables) keep it in step with light and dark mode. `:host` is a size container, so layouts can switch with `@container` queries
+- Canvas fallback image: shown in email (the `wp_mail` filter strips the live code and adds a "View the interactive version on the web" link) and RSS, and anywhere the shadow root does not attach, such as Minn Admin's island preview
+- Canvas code renders only when the post author has `unfiltered_html`; otherwise the block falls back to its image and caption
+- Canvas in the editor: live shadow-root preview with a Code/Preview toolbar toggle, frame and caption settings, and a fallback image picker. Minn Admin gets an insert template and textarea controls for the code attributes
+
 ## 1.8.1 — 2026-08-22
 
 - Timeline: pin `box-sizing: border-box` on the item dot pseudo-element. Themes whose reset targets only `*` (which never matches pseudo-elements) rendered the 12px dot as 16px including its ring border, centering it 2px right of the rail
