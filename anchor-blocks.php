@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Anchor Blocks
- * Description: Custom blocks for Anchor Hosting blog posts — Conversation, Timeline, Callout, Stats Dashboard, Bar Chart, Report Card, Indicators of Compromise, Vector Cards, and Term List.
+ * Description: Custom blocks for Anchor Hosting blog posts — Conversation, Timeline, Callout, Stats Dashboard, Bar Chart, Report Card, Indicators of Compromise, Vector Cards, Term List, Data Table, and Canvas.
  * Version: 1.8.1
  * Author: Austin Ginder
  * Author URI: https://anchor.host
@@ -224,6 +224,23 @@ add_action( 'init', function() {
 			'highlight' => [ 'type' => 'number', 'default' => -1 ],
 		],
 	] ) );
+
+	// Canvas — a per-post custom coded area (HTML/SVG + CSS + optional JS)
+	// rendered into a declarative shadow root, with a fallback image for
+	// email, RSS and any context where the shadow root never attaches.
+	register_block_type( 'anchor/canvas', array_merge( $block_args, [
+		'title'           => 'Canvas',
+		'render_callback' => 'anchor_blocks_render_canvas',
+		'attributes'      => [
+			'html'        => [ 'type' => 'string',  'default' => '' ],
+			'css'         => [ 'type' => 'string',  'default' => '' ],
+			'js'          => [ 'type' => 'string',  'default' => '' ],
+			'caption'     => [ 'type' => 'string',  'default' => '' ],
+			'fallbackId'  => [ 'type' => 'number',  'default' => 0 ],
+			'fallbackAlt' => [ 'type' => 'string',  'default' => '' ],
+			'frame'       => [ 'type' => 'boolean', 'default' => true ],
+		],
+	] ) );
 } );
 
 // Ensure block styles load inside the editor iframe
@@ -239,6 +256,17 @@ function anchor_blocks_inline_email_styles( $args ) {
 	$html = $args['message'];
 	if ( strpos( $html, 'wp-block-anchor-' ) === false && strpos( $html, 'badge' ) === false ) {
 		return $args;
+	}
+
+	// Canvas — email clients ignore shadow DOM, so drop the live code and
+	// leave the light-DOM fallback image, then reveal the "view on the web" link.
+	if ( strpos( $html, 'wp-block-anchor-canvas' ) !== false ) {
+		$html = preg_replace( '#<template shadowrootmode="open">[\s\S]*?</template><!--/ab-canvas-->#', '', $html );
+		$html = preg_replace( '#<script class="ab-canvas-script">[\s\S]*?</script>#', '', $html );
+		$html = str_replace( ' hidden class="ab-canvas-weblink"', ' class="ab-canvas-weblink"', $html );
+		$html = preg_replace( '/<figure class="wp-block-anchor-canvas[^"]*"/', '<figure class="wp-block-anchor-canvas" style="margin:1.5rem 0"', $html );
+		$html = str_replace( 'class="ab-canvas-caption"', 'class="ab-canvas-caption" style="margin-top:0.6rem;font-size:0.85rem;line-height:1.5;color:#6b7f94;text-align:center"', $html );
+		$html = str_replace( 'class="ab-canvas-weblink"', 'class="ab-canvas-weblink" style="display:block;margin-top:0.35rem;font-size:0.85rem;text-align:center;color:#2b8fc7"', $html );
 	}
 
 	$map = [
@@ -878,5 +906,65 @@ function anchor_blocks_render_report_card( $attrs, $content ) {
 	return sprintf(
 		'<div class="wp-block-anchor-report-card">%s<div class="ab-rc-body">%s</div></div>',
 		$header, $content
+	);
+}
+
+function anchor_blocks_render_canvas( $attrs ) {
+	$html     = (string) ( $attrs['html'] ?? '' );
+	$css      = (string) ( $attrs['css'] ?? '' );
+	$js       = (string) ( $attrs['js'] ?? '' );
+	$caption  = wp_kses_post( $attrs['caption'] ?? '' );
+	$fallback = (int) ( $attrs['fallbackId'] ?? 0 );
+	$alt      = (string) ( $attrs['fallbackAlt'] ?? '' );
+	$framed   = ! empty( $attrs['frame'] ?? true );
+
+	// Raw code only renders for authors who may post unfiltered HTML.
+	// Everyone else gets the fallback image and caption.
+	$post    = get_post();
+	$trusted = $post ? user_can( (int) $post->post_author, 'unfiltered_html' ) : current_user_can( 'unfiltered_html' );
+	$live    = $trusted && ! is_feed() && ( '' !== trim( $html ) || '' !== trim( $css ) );
+
+	$fallback_html = '';
+	if ( $fallback ) {
+		$fallback_html = wp_get_attachment_image( $fallback, 'full', false, [
+			'class'   => 'ab-canvas-fallback',
+			'alt'     => $alt,
+			'loading' => 'lazy',
+		] );
+	}
+
+	$shadow = '';
+	if ( $live ) {
+		// Shared base: tokens inherit across the shadow boundary, so the
+		// code can use var(--ab-*) / the theme's vars and follow dark mode.
+		$base   = ':host{display:block;color:var(--ab-text);line-height:1.5;container-type:inline-size}'
+			. '*,*::before,*::after{box-sizing:border-box}img,svg{max-width:100%;height:auto}';
+		$shadow = '<template shadowrootmode="open"><style>' . $base . '</style>'
+			. ( '' !== trim( $css ) ? '<style>' . $css . '</style>' : '' )
+			. $html . '</template><!--/ab-canvas-->';
+	}
+
+	$script = '';
+	if ( $live && '' !== trim( $js ) ) {
+		// Runs once per block with `root` (the shadow root) and `host` in scope.
+		$script = '<script class="ab-canvas-script">(function(){var s=document.currentScript,h=s&&s.previousElementSibling;if(!h)return;'
+			. '(function(root,host){' . str_ireplace( '</script', '<\/script', $js ) . "\n}).call(h,h.shadowRoot||h,h);})();</script>";
+	}
+
+	$weblink = '';
+	if ( $live && $post ) {
+		$weblink = sprintf( '<a hidden class="ab-canvas-weblink" href="%s">View the interactive version on the web</a>', esc_url( get_permalink( $post ) ) );
+	}
+
+	$caption_html = $caption ? sprintf( '<figcaption class="ab-canvas-caption">%s</figcaption>', $caption ) : '';
+
+	return sprintf(
+		'<figure class="wp-block-anchor-canvas%s"><div class="ab-canvas-stage"><div class="ab-canvas-host">%s%s</div>%s</div>%s%s</figure>',
+		$framed ? ' is-framed' : '',
+		$shadow,
+		$fallback_html,
+		$script,
+		$caption_html,
+		$weblink
 	);
 }

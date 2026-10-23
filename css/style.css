@@ -949,3 +949,38 @@ body:not(.wp-admin) .wp-block-anchor-vector-cards .ab-vc-heading {
 	padding: 2px 6px;
 	border-radius: 4px;
 }
+
+/* ============================================================
+   Canvas — per-post custom code in a shadow root. Only the frame,
+   caption and fallback live here; the code styles itself inside
+   the shadow root and reads these tokens through inheritance.
+   ============================================================ */
+.wp-block-anchor-canvas {
+	margin: 2rem 0;
+}
+
+.wp-block-anchor-canvas.is-framed .ab-canvas-stage {
+	background: var(--ab-surface);
+	border: 1px solid var(--ab-border);
+	border-radius: var(--ab-radius);
+	box-shadow: var(--ab-shadow);
+	overflow: hidden;
+}
+
+.wp-block-anchor-canvas .ab-canvas-fallback {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.wp-block-anchor-canvas .ab-canvas-caption {
+	margin-top: 0.75rem;
+	font-size: 0.85rem;
+	line-height: 1.5;
+	color: var(--ab-muted);
+	text-align: center;
+}
+
+.wp-block-anchor-canvas .ab-canvas-weblink[hidden] {
+	display: none;
+}

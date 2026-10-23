@@ -18,6 +18,9 @@
  *   humanized (`label` → "Speaker" / "Type" / "Badge", `percent` →
  *   "Bar width (%)"), and textareas for two long-text attrs not named
  *   `content`.
+ * - Canvas: textareas for its code attributes. Minn previews islands from
+ *   server HTML inserted without the parser, so the declarative shadow root
+ *   never attaches there and the canvas shows its fallback image instead.
  *
  * Harmless when Minn Admin isn't installed: the filter simply never runs.
  *
@@ -97,6 +100,20 @@ add_filter( 'minn_admin_block_forms', function ( $forms ) {
 		'attributes' => [
 			'highlight' => [ 'label' => 'Highlight row (index)' ],
 			// columns / align / rows are arrays — Minn's generic form skips them.
+		],
+	];
+
+	$forms['anchor/canvas'] = [
+		'insert'     => [
+			'label'    => 'Canvas',
+			'template' => '<!-- wp:anchor/canvas {"caption":"Caption"} /-->',
+		],
+		'attributes' => [
+			'html'        => [ 'label' => 'HTML / SVG', 'control' => 'textarea' ],
+			'css'         => [ 'label' => 'CSS (scoped; :host is the wrapper)', 'control' => 'textarea' ],
+			'js'          => [ 'label' => 'JS (runs on the page with root and host)', 'control' => 'textarea' ],
+			'fallbackId'  => [ 'label' => 'Fallback image (attachment ID)' ],
+			'fallbackAlt' => [ 'label' => 'Fallback alt text' ],
 		],
 	];
 

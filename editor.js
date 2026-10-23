@@ -1,7 +1,7 @@
 ( function( blocks, element, blockEditor, components ) {
 	const el = element.createElement;
-	const { RichText, InnerBlocks, InspectorControls, useBlockProps } = blockEditor;
-	const { PanelBody, SelectControl, TextControl } = components;
+	const { RichText, InnerBlocks, InspectorControls, BlockControls, MediaUpload, MediaUploadCheck, useBlockProps } = blockEditor;
+	const { PanelBody, SelectControl, TextControl, TextareaControl, ToggleControl, Button, ToolbarGroup, ToolbarButton } = components;
 
 	/* =====================================================================
 	   CONVERSATION — Parent block
@@ -888,6 +888,91 @@
 				),
 				title ? el( 'div', { className: 'ab-dt-title' }, title ) : null,
 				el( 'table', { className: 'ab-dt-table' }, thead, tbody )
+			);
+		},
+		save: function() { return null; }
+	} );
+
+	/* =====================================================================
+	   CANVAS — per-post custom code in a shadow root (server-rendered)
+	   ===================================================================== */
+
+	// Mirrors the base sheet in anchor_blocks_render_canvas().
+	const CANVAS_BASE = ':host{display:block;color:var(--ab-text);line-height:1.5;container-type:inline-size}'
+		+ '*,*::before,*::after{box-sizing:border-box}img,svg{max-width:100%;height:auto}';
+
+	// Live preview: same shadow-root isolation as the front end. Scripts are
+	// not run in the editor; they run on the published page.
+	function CanvasPreview( props ) {
+		const ref = element.useRef( null );
+		element.useEffect( function() {
+			const host = ref.current;
+			if ( ! host ) return;
+			const root = host.shadowRoot || host.attachShadow( { mode: 'open' } );
+			root.innerHTML = '<style>' + CANVAS_BASE + '</style><style>' + ( props.css || '' ) + '</style>' + ( props.html || '' );
+		}, [ props.html, props.css ] );
+		return el( 'div', { className: 'ab-canvas-host', ref: ref } );
+	}
+
+	blocks.registerBlockType( 'anchor/canvas', {
+		apiVersion: 3,
+		title: 'Canvas',
+		icon: 'art',
+		category: 'design',
+		description: 'A custom coded area: HTML or SVG with its own CSS and optional JS, isolated in a shadow root. Add a fallback image for email and RSS.',
+		attributes: {
+			html:        { type: 'string',  default: '' },
+			css:         { type: 'string',  default: '' },
+			js:          { type: 'string',  default: '' },
+			caption:     { type: 'string',  default: '' },
+			fallbackId:  { type: 'number',  default: 0 },
+			fallbackAlt: { type: 'string',  default: '' },
+			frame:       { type: 'boolean', default: true }
+		},
+		edit: function( props ) {
+			const a = props.attributes;
+			const set = function( key ) { return function( val ) { const o = {}; o[ key ] = val; props.setAttributes( o ); }; };
+			const [ editing, setEditing ] = element.useState( ! a.html && ! a.css );
+			const blockProps = useBlockProps( { className: 'wp-block-anchor-canvas' + ( a.frame ? ' is-framed' : '' ) } );
+
+			const code = el( 'div', { className: 'ab-canvas-code' },
+				el( TextareaControl, { label: 'HTML / SVG', value: a.html, rows: 12, onChange: set( 'html' ), __nextHasNoMarginBottom: true } ),
+				el( TextareaControl, { label: 'CSS (scoped to this canvas; :host is the wrapper)', value: a.css, rows: 8, onChange: set( 'css' ), __nextHasNoMarginBottom: true } ),
+				el( TextareaControl, { label: 'JS (optional; runs on the page with root and host in scope)', value: a.js, rows: 6, onChange: set( 'js' ), __nextHasNoMarginBottom: true } )
+			);
+			const preview = ( a.html || a.css )
+				? el( CanvasPreview, { html: a.html, css: a.css } )
+				: el( 'div', { className: 'ab-canvas-empty' }, 'Empty canvas. Switch to Code to add HTML or SVG.' );
+
+			return el( 'figure', blockProps,
+				el( BlockControls, null,
+					el( ToolbarGroup, null,
+						el( ToolbarButton, { icon: editing ? 'visibility' : 'editor-code', label: editing ? 'Preview' : 'Code', onClick: function() { setEditing( ! editing ); } } )
+					)
+				),
+				el( InspectorControls, null,
+					el( PanelBody, { title: 'Canvas' },
+						el( ToggleControl, { label: 'Frame', help: 'Card background, border and radius around the canvas.', checked: a.frame, onChange: set( 'frame' ) } ),
+						el( TextControl, { label: 'Caption', value: a.caption, onChange: set( 'caption' ) } )
+					),
+					el( PanelBody, { title: 'Fallback image' },
+						el( 'p', { style: { fontSize: '12px', color: '#6b7f94' } }, 'Shown in emails, RSS, and anywhere the live canvas cannot render.' ),
+						el( MediaUploadCheck, null,
+							el( MediaUpload, {
+								onSelect: function( m ) { props.setAttributes( { fallbackId: m.id, fallbackAlt: a.fallbackAlt || m.alt || '' } ); },
+								allowedTypes: [ 'image' ],
+								value: a.fallbackId,
+								render: function( o ) {
+									return el( Button, { variant: 'secondary', onClick: o.open }, a.fallbackId ? 'Replace image (#' + a.fallbackId + ')' : 'Choose image' );
+								}
+							} )
+						),
+						a.fallbackId ? el( Button, { variant: 'link', isDestructive: true, onClick: function() { props.setAttributes( { fallbackId: 0 } ); } }, 'Remove' ) : null,
+						el( TextControl, { label: 'Alt text', value: a.fallbackAlt, onChange: set( 'fallbackAlt' ) } )
+					)
+				),
+				el( 'div', { className: 'ab-canvas-stage' }, editing ? code : preview ),
+				a.caption ? el( 'figcaption', { className: 'ab-canvas-caption' }, a.caption ) : null
 			);
 		},
 		save: function() { return null; }

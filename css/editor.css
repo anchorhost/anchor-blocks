@@ -647,3 +647,25 @@
 	content: attr(data-rich-text-placeholder);
 	opacity: 0.5;
 }
+
+/* Canvas — code panes shown in place of the preview while editing */
+.wp-block-anchor-canvas .ab-canvas-code {
+	display: grid;
+	gap: 12px;
+	padding: 16px;
+	background: var(--ab-surface-2);
+}
+
+.wp-block-anchor-canvas .ab-canvas-code textarea {
+	font-family: var(--ab-mono);
+	font-size: 12px;
+	line-height: 1.5;
+	tab-size: 2;
+}
+
+.wp-block-anchor-canvas .ab-canvas-empty {
+	padding: 2rem;
+	text-align: center;
+	color: var(--ab-muted);
+	font-size: 0.9rem;
+}
