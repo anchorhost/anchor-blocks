@@ -14,7 +14,7 @@ Custom Gutenberg blocks for [Anchor Hosting](https://anchor.host) blog posts.
 - **Vector Cards** — Grid of attack-method cards with a label badge, how-it-works body, and a "Detect" footer
 - **Term List** — Single card listing terms, each with a large color-keyed label, a title, and a description
 - **Data Table** — Clean monospace data table with a title, per-column alignment, and an optional highlighted row
-- **Canvas** — A per-post custom coded area: HTML or SVG with its own CSS and optional JS, isolated in a shadow root that still inherits the theme's colour tokens. A fallback image stands in for email and RSS
+- **Canvas** — A per-post custom coded area: HTML or SVG with its own CSS and optional JS, isolated in a shadow root that still inherits the theme's colour tokens. A fallback image stands in for email and RSS, and an optional click-to-expand setting opens it larger in a modal
 - **Audio** — A player card with a scrubbable waveform and clickable section markers, styled with the theme's colours. Email gets a link card; `wp anchor-blocks waveform <file-or-url>` generates the peaks
 
 All blocks are server-side rendered to avoid block validation errors across updates. Email-safe inline styles are automatically applied when blocks appear in outgoing `wp_mail` messages.

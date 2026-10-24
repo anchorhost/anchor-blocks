@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Anchor Blocks
  * Description: Custom blocks for Anchor Hosting blog posts — Conversation, Timeline, Callout, Stats Dashboard, Bar Chart, Report Card, Indicators of Compromise, Vector Cards, Term List, Data Table, Canvas, and Audio.
- * Version: 1.10.0
+ * Version: 1.11.0
  * Author: Austin Ginder
  * Author URI: https://anchor.host
  * License: MIT
@@ -10,7 +10,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'ANCHOR_BLOCKS_VERSION', '1.10.0' );
+define( 'ANCHOR_BLOCKS_VERSION', '1.11.0' );
 define( 'ANCHOR_BLOCKS_URL', plugin_dir_url( __FILE__ ) );
 define( 'ANCHOR_BLOCKS_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -34,6 +34,15 @@ add_action( 'init', function() {
 	wp_register_script(
 		'anchor-blocks-audio',
 		ANCHOR_BLOCKS_URL . 'audio.js',
+		[],
+		ANCHOR_BLOCKS_VERSION,
+		[ 'in_footer' => true, 'strategy' => 'defer' ]
+	);
+
+	// Click-to-expand modal for anchor/canvas. Enqueued only by a canvas with expand on.
+	wp_register_script(
+		'anchor-blocks-canvas',
+		ANCHOR_BLOCKS_URL . 'canvas.js',
 		[],
 		ANCHOR_BLOCKS_VERSION,
 		[ 'in_footer' => true, 'strategy' => 'defer' ]
@@ -251,6 +260,7 @@ add_action( 'init', function() {
 			'fallbackId'  => [ 'type' => 'number',  'default' => 0 ],
 			'fallbackAlt' => [ 'type' => 'string',  'default' => '' ],
 			'frame'       => [ 'type' => 'boolean', 'default' => true ],
+			'expand'      => [ 'type' => 'boolean', 'default' => false ],
 		],
 	] ) );
 
@@ -295,6 +305,7 @@ function anchor_blocks_inline_email_styles( $args ) {
 	if ( strpos( $html, 'wp-block-anchor-canvas' ) !== false ) {
 		$html = preg_replace( '#<template shadowrootmode="open">[\s\S]*?</template><!--/ab-canvas-->#', '', $html );
 		$html = preg_replace( '#<script class="ab-canvas-script">[\s\S]*?</script>#', '', $html );
+		$html = str_replace( '" data-expand>', '">', $html );
 		$html = str_replace( ' hidden class="ab-canvas-weblink"', ' class="ab-canvas-weblink"', $html );
 		$html = preg_replace( '/<figure class="wp-block-anchor-canvas[^"]*"/', '<figure class="wp-block-anchor-canvas" style="margin:1.5rem 0"', $html );
 		$html = str_replace( 'class="ab-canvas-caption"', 'class="ab-canvas-caption" style="margin-top:0.6rem;font-size:0.85rem;line-height:1.5;color:#6b7f94;text-align:center"', $html );
@@ -955,6 +966,7 @@ function anchor_blocks_render_canvas( $attrs ) {
 	$fallback = (int) ( $attrs['fallbackId'] ?? 0 );
 	$alt      = (string) ( $attrs['fallbackAlt'] ?? '' );
 	$framed   = ! empty( $attrs['frame'] ?? true );
+	$expand   = ! empty( $attrs['expand'] ?? false );
 
 	// Raw code only renders for authors who may post unfiltered HTML.
 	// Everyone else gets the fallback image and caption.
@@ -985,8 +997,15 @@ function anchor_blocks_render_canvas( $attrs ) {
 	$script = '';
 	if ( $live && '' !== trim( $js ) ) {
 		// Runs once per block with `root` (the shadow root) and `host` in scope.
+		// The function and the untouched markup stay on the host, so the
+		// expand modal can render a fresh copy and run the code again.
 		$script = '<script class="ab-canvas-script">(function(){var s=document.currentScript,h=s&&s.previousElementSibling;if(!h)return;'
-			. '(function(root,host){' . str_ireplace( '</script', '<\/script', $js ) . "\n}).call(h,h.shadowRoot||h,h);})();</script>";
+			. 'var r=h.shadowRoot||h,f=function(root,host){' . str_ireplace( '</script', '<\/script', $js ) . "\n};"
+			. 'h.abCanvasMarkup=r.innerHTML;h.abCanvasRun=f;f.call(h,r,h);})();</script>';
+	}
+
+	if ( $live && $expand ) {
+		wp_enqueue_script( 'anchor-blocks-canvas' );
 	}
 
 	$weblink = '';
@@ -997,8 +1016,9 @@ function anchor_blocks_render_canvas( $attrs ) {
 	$caption_html = $caption ? sprintf( '<figcaption class="ab-canvas-caption">%s</figcaption>', $caption ) : '';
 
 	return sprintf(
-		'<figure class="wp-block-anchor-canvas%s"><div class="ab-canvas-stage"><div class="ab-canvas-host">%s%s</div>%s</div>%s%s</figure>',
+		'<figure class="wp-block-anchor-canvas%s"%s><div class="ab-canvas-stage"><div class="ab-canvas-host">%s%s</div>%s</div>%s%s</figure>',
 		$framed ? ' is-framed' : '',
+		$live && $expand ? ' data-expand' : '',
 		$shadow,
 		$fallback_html,
 		$script,

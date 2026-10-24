@@ -115,6 +115,7 @@ add_filter( 'minn_admin_block_forms', function ( $forms ) {
 			'js'          => [ 'label' => 'JS (runs on the page with root and host)', 'control' => 'textarea' ],
 			'fallbackId'  => [ 'label' => 'Fallback image (attachment ID)' ],
 			'fallbackAlt' => [ 'label' => 'Fallback alt text' ],
+			'expand'      => [ 'label' => 'Click to expand' ],
 		],
 	];
 

@@ -927,7 +927,8 @@
 			caption:     { type: 'string',  default: '' },
 			fallbackId:  { type: 'number',  default: 0 },
 			fallbackAlt: { type: 'string',  default: '' },
-			frame:       { type: 'boolean', default: true }
+			frame:       { type: 'boolean', default: true },
+			expand:      { type: 'boolean', default: false }
 		},
 		edit: function( props ) {
 			const a = props.attributes;
@@ -953,6 +954,7 @@
 				el( InspectorControls, null,
 					el( PanelBody, { title: 'Canvas' },
 						el( ToggleControl, { label: 'Frame', help: 'Card background, border and radius around the canvas.', checked: a.frame, onChange: set( 'frame' ) } ),
+						el( ToggleControl, { label: 'Click to expand', help: 'Readers can open the canvas in a larger modal. It renders again there, so animations start over.', checked: a.expand, onChange: set( 'expand' ) } ),
 						el( TextControl, { label: 'Caption', value: a.caption, onChange: set( 'caption' ) } )
 					),
 					el( PanelBody, { title: 'Fallback image' },

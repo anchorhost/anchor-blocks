@@ -999,6 +999,129 @@ body:not(.wp-admin) .wp-block-anchor-vector-cards .ab-vc-heading {
 	display: none;
 }
 
+/* Click to expand: canvas.js adds the button and opens the modal. The
+   button sits over arbitrary canvas art, so it carries its own dark chip
+   rather than a theme colour. */
+.wp-block-anchor-canvas.is-expandable .ab-canvas-stage {
+	position: relative;
+	cursor: zoom-in;
+}
+
+.wp-block-anchor-canvas .ab-canvas-expand,
+.ab-canvas-dialog-close {
+	display: grid;
+	place-items: center;
+	padding: 0;
+	border: 1px solid rgba(255, 255, 255, .18);
+	border-radius: 10px;
+	background: rgba(10, 14, 22, .55);
+	-webkit-backdrop-filter: blur(6px);
+	backdrop-filter: blur(6px);
+	color: #fff;
+	cursor: pointer;
+	transition: opacity .15s ease, background-color .15s ease;
+}
+
+.wp-block-anchor-canvas .ab-canvas-expand {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	width: 34px;
+	height: 34px;
+	opacity: .7;
+}
+
+.wp-block-anchor-canvas.is-expandable .ab-canvas-stage:hover .ab-canvas-expand,
+.wp-block-anchor-canvas .ab-canvas-expand:focus-visible {
+	opacity: 1;
+	background: rgba(10, 14, 22, .8);
+}
+
+.wp-block-anchor-canvas .ab-canvas-expand svg,
+.ab-canvas-dialog-close svg {
+	width: 16px;
+	height: 16px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.8;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.ab-canvas-expand:focus-visible,
+.ab-canvas-dialog-close:focus-visible {
+	outline: 2px solid #fff;
+	outline-offset: 2px;
+}
+
+html.ab-canvas-open {
+	overflow: hidden;
+}
+
+.ab-canvas-dialog {
+	max-width: none;
+	max-height: 100dvh;
+	margin: auto;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--ab-text);
+	overflow: auto;
+	overscroll-behavior: contain;
+}
+
+/* The dialog takes focus on open (canvas.js), so the close button's ring
+   only shows once someone tabs to it. The dialog itself needs no ring. */
+.ab-canvas-dialog:focus {
+	outline: none;
+}
+
+.ab-canvas-dialog::backdrop {
+	background: rgba(5, 8, 14, .86);
+	-webkit-backdrop-filter: blur(4px);
+	backdrop-filter: blur(4px);
+}
+
+.ab-canvas-dialog-frame {
+	position: relative;
+	isolation: isolate;
+	max-width: calc(100vw - 32px);
+	/* Rounder than the post's frame, so a canvas with its own rounded
+	   corners covers the clip instead of showing the surface behind it. */
+	border-radius: 18px;
+	overflow: hidden;
+	animation: ab-canvas-in .22s ease-out;
+}
+
+/* The surface sits 1px inside the clip: a rounded overflow clip bleeds its
+   own background at the antialiased edge, a light hairline around dark art. */
+.ab-canvas-dialog-frame.is-framed::before {
+	content: "";
+	position: absolute;
+	inset: 1px;
+	z-index: -1;
+	border-radius: inherit;
+	background: var(--ab-surface);
+}
+
+.ab-canvas-dialog-close {
+	position: fixed;
+	top: 12px;
+	right: 12px;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+}
+
+.ab-canvas-dialog-close:hover {
+	background: rgba(10, 14, 22, .85);
+}
+
+@keyframes ab-canvas-in {
+	from { opacity: 0; transform: scale(.96); }
+	to { opacity: 1; transform: none; }
+}
+
 /* ============================================================
    Audio — player card. A real <audio> plays; audio.js drives the
    button, the waveform (scrub) and the section row (jump). The
@@ -1346,5 +1469,9 @@ body:not(.wp-admin) .wp-block-anchor-vector-cards .ab-vc-heading {
 		animation: none;
 		border-color: var(--ab-accent);
 		opacity: .4;
+	}
+
+	.ab-canvas-dialog-frame {
+		animation: none;
 	}
 }
