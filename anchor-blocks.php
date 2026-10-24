@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Anchor Blocks
- * Description: Custom blocks for Anchor Hosting blog posts — Conversation, Timeline, Callout, Stats Dashboard, Bar Chart, Report Card, Indicators of Compromise, Vector Cards, Term List, Data Table, and Canvas.
+ * Description: Custom blocks for Anchor Hosting blog posts — Conversation, Timeline, Callout, Stats Dashboard, Bar Chart, Report Card, Indicators of Compromise, Vector Cards, Term List, Data Table, Canvas, and Audio.
  * Version: 1.9.0
  * Author: Austin Ginder
  * Author URI: https://anchor.host
@@ -16,15 +16,27 @@ define( 'ANCHOR_BLOCKS_DIR', plugin_dir_path( __FILE__ ) );
 
 require_once ANCHOR_BLOCKS_DIR . 'app/Updater.php';
 require_once ANCHOR_BLOCKS_DIR . 'app/MinnAdmin.php';
+if ( defined( 'WP_CLI' ) && WP_CLI ) {
+	require_once ANCHOR_BLOCKS_DIR . 'app/Cli.php';
+}
 new AnchorBlocks\Updater();
 
 add_action( 'init', function() {
 	wp_register_script(
 		'anchor-blocks-editor',
 		ANCHOR_BLOCKS_URL . 'editor.js',
-		[ 'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n' ],
+		[ 'wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n', 'wp-server-side-render' ],
 		ANCHOR_BLOCKS_VERSION,
 		true
+	);
+
+	// Front-end player for anchor/audio. Enqueued only on pages that render one.
+	wp_register_script(
+		'anchor-blocks-audio',
+		ANCHOR_BLOCKS_URL . 'audio.js',
+		[],
+		ANCHOR_BLOCKS_VERSION,
+		[ 'in_footer' => true, 'strategy' => 'defer' ]
 	);
 
 	wp_register_style(
@@ -241,6 +253,26 @@ add_action( 'init', function() {
 			'frame'       => [ 'type' => 'boolean', 'default' => true ],
 		],
 	] ) );
+
+	// Audio — a player card with a waveform you scrub and section markers you
+	// jump to. A real <audio> element does the playing; the waveform and the
+	// sections are stored on the block (peaks 0-99, one "m:ss Label" a line),
+	// so nothing has to read the file at page load.
+	register_block_type( 'anchor/audio', array_merge( $block_args, [
+		'title'           => 'Audio',
+		'render_callback' => 'anchor_blocks_render_audio',
+		'view_script'     => 'anchor-blocks-audio',
+		'attributes'      => [
+			'src'      => [ 'type' => 'string', 'default' => '' ],
+			'title'    => [ 'type' => 'string', 'default' => '' ],
+			'meta'     => [ 'type' => 'string', 'default' => '' ],
+			'link'     => [ 'type' => 'string', 'default' => '' ],
+			'caption'  => [ 'type' => 'string', 'default' => '' ],
+			'duration' => [ 'type' => 'number', 'default' => 0 ],
+			'peaks'    => [ 'type' => 'string', 'default' => '' ],
+			'sections' => [ 'type' => 'string', 'default' => '' ],
+		],
+	] ) );
 } );
 
 // Ensure block styles load inside the editor iframe
@@ -388,6 +420,12 @@ function anchor_blocks_inline_email_styles( $args ) {
 		'<td$1 style="$2;padding:0.5rem 0.75rem;border-bottom:1px solid #e4e9f0"',
 		$html
 	);
+
+	// Audio — no player in email: a card that links out to the song.
+	// Built after the generic cell styling above so its cells keep their own padding.
+	if ( strpos( $html, 'wp-block-anchor-audio' ) !== false ) {
+		$html = preg_replace_callback( '#<figure class="wp-block-anchor-audio"([^>]*)>([\s\S]*?)</figure>#', 'anchor_blocks_email_audio', $html );
+	}
 
 	// Rebuild entire timeline block as a single table (continuous vertical line + dots)
 	$dot_colors = [
@@ -967,4 +1005,146 @@ function anchor_blocks_render_canvas( $attrs ) {
 		$caption_html,
 		$weblink
 	);
+}
+
+/**
+ * "m:ss" (or "h:mm:ss", or plain seconds) to seconds. Decimals allowed.
+ */
+function anchor_blocks_audio_seconds( $stamp ) {
+	$seconds = 0.0;
+	foreach ( explode( ':', trim( $stamp ) ) as $part ) {
+		$seconds = $seconds * 60 + (float) $part;
+	}
+	return $seconds;
+}
+
+function anchor_blocks_audio_time( $seconds ) {
+	$seconds = max( 0, (int) floor( $seconds ) );
+	return sprintf( '%d:%02d', intdiv( $seconds, 60 ), $seconds % 60 );
+}
+
+/**
+ * Sections are one per line, "1:16 Drop". Returns [ [ 'start' => 76.0, 'name' => 'Drop' ], … ] sorted by start.
+ */
+function anchor_blocks_audio_sections( $text ) {
+	$sections = [];
+	foreach ( preg_split( '/\R/', (string) $text ) as $line ) {
+		if ( preg_match( '/^\s*(\d+(?::\d+){0,2}(?:\.\d+)?)\s+(.+?)\s*$/', $line, $m ) ) {
+			$sections[] = [ 'start' => anchor_blocks_audio_seconds( $m[1] ), 'name' => $m[2] ];
+		}
+	}
+	usort( $sections, function ( $a, $b ) { return $a['start'] <=> $b['start']; } );
+	return $sections;
+}
+
+function anchor_blocks_render_audio( $attrs ) {
+	$src      = esc_url( $attrs['src'] ?? '' );
+	$title    = trim( (string) ( $attrs['title'] ?? '' ) );
+	$meta     = trim( (string) ( $attrs['meta'] ?? '' ) );
+	$link     = esc_url( $attrs['link'] ?? '' );
+	$caption  = wp_kses_post( $attrs['caption'] ?? '' );
+	$duration = max( 0, (float) ( $attrs['duration'] ?? 0 ) );
+	if ( ! $src ) {
+		return '';
+	}
+
+	$caption_html = $caption ? sprintf( '<figcaption class="ab-audio-caption">%s</figcaption>', $caption ) : '';
+	$label        = '' !== $title ? $title : wp_basename( wp_parse_url( $src, PHP_URL_PATH ) );
+	$title_html   = esc_html( $label );
+	if ( $link ) {
+		$title_html = sprintf( '<a href="%s">%s</a>', $link, $title_html );
+	}
+
+	// Feeds get the plain element: readers either play <audio> or show the link.
+	if ( is_feed() ) {
+		return sprintf(
+			'<figure class="wp-block-anchor-audio"><p><strong>%s</strong></p><audio controls preload="none" src="%s"></audio>%s</figure>',
+			$title_html, $src, $caption_html
+		);
+	}
+
+	$peaks = array_values( array_filter( array_map( 'trim', explode( ',', (string) ( $attrs['peaks'] ?? '' ) ) ), 'is_numeric' ) );
+	$bars  = '';
+	foreach ( $peaks as $peak ) {
+		$bars .= sprintf( '<i style="height:%d%%"></i>', max( 6, min( 100, (int) $peak ) ) );
+	}
+
+	// Sections need a length to sit against; without one they're left out.
+	$sections_html = '';
+	$sections      = $duration ? anchor_blocks_audio_sections( $attrs['sections'] ?? '' ) : [];
+	foreach ( $sections as $i => $section ) {
+		$start = min( $section['start'], $duration );
+		$end   = isset( $sections[ $i + 1 ] ) ? min( $sections[ $i + 1 ]['start'], $duration ) : $duration;
+		$sections_html .= sprintf(
+			'<li style="left:%1$.3F%%;width:%2$.3F%%"><button type="button" data-t="%3$.2F" title="%4$s, %5$s" aria-label="Jump to %4$s, %5$s">%4$s</button></li>',
+			$start / $duration * 100,
+			max( 0, $end - $start ) / $duration * 100,
+			$start,
+			esc_attr( $section['name'] ),
+			anchor_blocks_audio_time( $start )
+		);
+	}
+	if ( $sections_html ) {
+		$sections_html = '<ol class="ab-audio-sections">' . $sections_html . '</ol>';
+	}
+
+	$total = $duration ? anchor_blocks_audio_time( $duration ) : '0:00';
+
+	return sprintf(
+		'<figure class="wp-block-anchor-audio" data-title="%1$s" data-href="%2$s" data-duration="%3$.2F">'
+			. '<div class="ab-audio-card">'
+				. '<div class="ab-audio-top">'
+					. '<button type="button" class="ab-audio-play" aria-label="Play %1$s" disabled>'
+						. '<svg class="ab-audio-i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>'
+						. '<svg class="ab-audio-i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>'
+					. '</button>'
+					. '<div class="ab-audio-head"><div class="ab-audio-title">%4$s</div>%5$s<div class="ab-audio-now" aria-hidden="true"></div></div>'
+					. '<div class="ab-audio-time"><span class="ab-audio-elapsed">0:00</span> / <span class="ab-audio-total">%6$s</span></div>'
+				. '</div>'
+				. '<div class="ab-audio-wave%7$s" role="slider" tabindex="0" aria-label="Seek %1$s" aria-valuemin="0" aria-valuemax="%8$d" aria-valuenow="0" aria-valuetext="0:00 of %6$s">'
+					. '<div class="ab-audio-bars" aria-hidden="true">%9$s</div><span class="ab-audio-line" aria-hidden="true"></span><span class="ab-audio-tip" aria-hidden="true"></span>'
+				. '</div>'
+				. '%10$s'
+			. '</div>'
+			. '<audio preload="none" src="%11$s"></audio>'
+			. '<noscript><audio controls preload="none" src="%11$s"></audio></noscript>'
+			. '%12$s'
+		. '</figure>',
+		esc_attr( $label ),
+		esc_attr( $link ? $link : $src ),
+		$duration,
+		$title_html,
+		'' !== $meta ? '<div class="ab-audio-meta">' . esc_html( $meta ) . '</div>' : '',
+		$total,
+		$bars ? '' : ' is-flat',
+		(int) round( $duration ),
+		$bars,
+		$sections_html,
+		$src,
+		$caption_html
+	);
+}
+
+/**
+ * Email: replace the player with a card that links to the song page (or the file).
+ */
+function anchor_blocks_email_audio( $m ) {
+	$attrs = $m[1];
+	$title = preg_match( '/data-title="([^"]*)"/', $attrs, $t ) ? $t[1] : 'Listen';
+	$href  = preg_match( '/data-href="([^"]*)"/', $attrs, $h ) ? $h[1] : '';
+	$meta  = preg_match( '#<div class="ab-audio-meta">([\s\S]*?)</div>#', $m[2], $mm ) ? $mm[1] : '';
+	$cap   = preg_match( '#<figcaption class="ab-audio-caption">([\s\S]*?)</figcaption>#', $m[2], $c ) ? $c[1] : '';
+	$total = preg_match( '#<span class="ab-audio-total">([^<]*)</span>#', $m[2], $d ) ? $d[1] : '';
+	$sub   = trim( implode( ' · ', array_filter( [ $meta, '0:00' !== $total ? $total : '' ] ) ) );
+
+	return '<div class="wp-block-anchor-audio" style="margin:1.5rem 0">'
+		. '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background:#fff;border:1px solid #e4e9f0;border-radius:12px"><tr>'
+		. '<td width="56" style="padding:14px 0 14px 16px;vertical-align:middle"><a href="' . $href . '" style="display:block;width:40px;height:40px;border-radius:20px;background:#123e8c;color:#fff;text-align:center;line-height:40px;font-size:16px;text-decoration:none">&#9654;</a></td>'
+		. '<td style="padding:14px 16px 14px 12px;vertical-align:middle;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif">'
+		. '<a href="' . $href . '" style="font-size:15px;font-weight:700;color:#15181d;text-decoration:none">' . $title . '</a>'
+		. ( $sub ? '<div style="font-size:13px;color:#6b7f94;margin-top:2px">' . $sub . '</div>' : '' )
+		. '<a href="' . $href . '" style="display:inline-block;margin-top:6px;font-size:13px;color:#2b8fc7">Listen on the web</a>'
+		. '</td></tr></table>'
+		. ( $cap ? '<p style="margin-top:0.6rem;font-size:0.85rem;line-height:1.5;color:#6b7f94;text-align:center">' . $cap . '</p>' : '' )
+		. '</div>';
 }

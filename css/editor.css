@@ -669,3 +669,13 @@
 	color: var(--ab-muted);
 	font-size: 0.9rem;
 }
+
+.wp-block-anchor-audio .ab-audio-empty,
+.ab-audio-empty {
+	padding: 2rem;
+	border: 1px dashed var(--ab-border);
+	border-radius: var(--ab-radius);
+	text-align: center;
+	color: var(--ab-muted);
+	font-size: 0.9rem;
+}

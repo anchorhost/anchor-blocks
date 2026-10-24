@@ -18,6 +18,7 @@
  *   humanized (`label` → "Speaker" / "Type" / "Badge", `percent` →
  *   "Bar width (%)"), and textareas for two long-text attrs not named
  *   `content`.
+ * - Audio: labels and textareas for its sections and peaks.
  * - Canvas: textareas for its code attributes. Minn previews islands from
  *   server HTML inserted without the parser, so the declarative shadow root
  *   never attaches there and the canvas shows its fallback image instead.
@@ -114,6 +115,21 @@ add_filter( 'minn_admin_block_forms', function ( $forms ) {
 			'js'          => [ 'label' => 'JS (runs on the page with root and host)', 'control' => 'textarea' ],
 			'fallbackId'  => [ 'label' => 'Fallback image (attachment ID)' ],
 			'fallbackAlt' => [ 'label' => 'Fallback alt text' ],
+		],
+	];
+
+	$forms['anchor/audio'] = [
+		'insert'     => [
+			'label'    => 'Audio',
+			'template' => '<!-- wp:anchor/audio {"title":"Title"} /-->',
+		],
+		'attributes' => [
+			'src'      => [ 'label' => 'Audio URL' ],
+			'meta'     => [ 'label' => 'Subtitle' ],
+			'link'     => [ 'label' => 'Title link (and email link)' ],
+			'duration' => [ 'label' => 'Length (seconds)' ],
+			'sections' => [ 'label' => 'Sections (one per line: "1:17 Drop")', 'control' => 'textarea' ],
+			'peaks'    => [ 'label' => 'Waveform peaks (wp anchor-blocks waveform <url>)', 'control' => 'textarea' ],
 		],
 	];
 

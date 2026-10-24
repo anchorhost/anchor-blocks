@@ -978,4 +978,101 @@
 		save: function() { return null; }
 	} );
 
+	/* =====================================================================
+	   AUDIO — player card with a scrubbable waveform and section markers.
+	   The preview is the server render (buttons stay inert in the editor).
+	   ===================================================================== */
+	// RMS per bar, scaled so the loudest bar is 99. Needs a file the browser
+	// may read: the media library, or a host that sends CORS headers.
+	function audioPeaks( url, bars ) {
+		return fetch( url ).then( function( r ) {
+			if ( ! r.ok ) throw new Error( 'HTTP ' + r.status );
+			return r.arrayBuffer();
+		} ).then( function( buf ) {
+			const Ctx = window.AudioContext || window.webkitAudioContext;
+			const ctx = new Ctx();
+			return ctx.decodeAudioData( buf ).then( function( audio ) {
+				ctx.close();
+				const data = audio.getChannelData( 0 );
+				const size = data.length / bars;
+				const rms = [];
+				for ( let b = 0; b < bars; b++ ) {
+					let sum = 0;
+					const from = Math.floor( b * size ), to = Math.floor( ( b + 1 ) * size );
+					for ( let i = from; i < to; i++ ) sum += data[ i ] * data[ i ];
+					rms.push( Math.sqrt( sum / Math.max( 1, to - from ) ) );
+				}
+				const max = Math.max.apply( null, rms ) || 1;
+				return { duration: Math.round( audio.duration * 100 ) / 100, peaks: rms.map( function( v ) { return Math.round( v / max * 99 ); } ).join( ',' ) };
+			} );
+		} );
+	}
+
+	blocks.registerBlockType( 'anchor/audio', {
+		apiVersion: 3,
+		title: 'Audio',
+		icon: 'format-audio',
+		category: 'media',
+		description: 'An audio player card: title, a waveform you can scrub and optional section markers. Email gets a link card instead.',
+		attributes: {
+			src:      { type: 'string', default: '' },
+			title:    { type: 'string', default: '' },
+			meta:     { type: 'string', default: '' },
+			link:     { type: 'string', default: '' },
+			caption:  { type: 'string', default: '' },
+			duration: { type: 'number', default: 0 },
+			peaks:    { type: 'string', default: '' },
+			sections: { type: 'string', default: '' }
+		},
+		edit: function( props ) {
+			const a = props.attributes;
+			const set = function( key ) { return function( val ) { const o = {}; o[ key ] = val; props.setAttributes( o ); }; };
+			const [ busy, setBusy ] = element.useState( false );
+			const [ note, setNote ] = element.useState( '' );
+			const blockProps = useBlockProps();
+			const SSR = window.wp.serverSideRender;
+
+			function generate() {
+				setBusy( true );
+				setNote( '' );
+				audioPeaks( a.src, 160 ).then( function( w ) {
+					props.setAttributes( { peaks: w.peaks, duration: w.duration } );
+					setNote( 'Waveform generated.' );
+				} ).catch( function() {
+					setNote( 'This file can\'t be read from the editor (a host without CORS headers?). Run: wp anchor-blocks waveform <url>' );
+				} ).then( function() { setBusy( false ); } );
+			}
+
+			return el( 'div', blockProps,
+				el( InspectorControls, null,
+					el( PanelBody, { title: 'Audio' },
+						el( MediaUploadCheck, null,
+							el( MediaUpload, {
+								onSelect: function( m ) { props.setAttributes( { src: m.url, title: a.title || m.title || '' } ); },
+								allowedTypes: [ 'audio' ],
+								render: function( o ) { return el( Button, { variant: 'secondary', onClick: o.open }, a.src ? 'Replace audio' : 'Choose audio' ); }
+							} )
+						),
+						el( TextControl, { label: 'Audio URL', value: a.src, onChange: set( 'src' ) } ),
+						el( TextControl, { label: 'Title', value: a.title, onChange: set( 'title' ) } ),
+						el( TextControl, { label: 'Subtitle', value: a.meta, onChange: set( 'meta' ) } ),
+						el( TextControl, { label: 'Title link', help: 'Also where the email card links. Defaults to the audio file.', value: a.link, onChange: set( 'link' ) } ),
+						el( TextControl, { label: 'Caption', value: a.caption, onChange: set( 'caption' ) } )
+					),
+					el( PanelBody, { title: 'Waveform and sections', initialOpen: false },
+						el( Button, { variant: 'secondary', isBusy: busy, disabled: busy || ! a.src, onClick: generate }, a.peaks ? 'Regenerate waveform' : 'Generate waveform' ),
+						note ? el( 'p', { style: { fontSize: '12px', color: '#6b7f94' } }, note ) : null,
+						el( TextControl, { label: 'Length (seconds)', type: 'number', value: a.duration || '', onChange: function( v ) { props.setAttributes( { duration: parseFloat( v ) || 0 } ); } } ),
+						el( TextareaControl, { label: 'Sections', help: 'One per line, start time then name: "1:17 Drop". Needs the length.', value: a.sections, rows: 6, onChange: set( 'sections' ) } ),
+						el( TextareaControl, { label: 'Peaks', help: 'Comma-separated 0-99, one per bar. Filled by Generate waveform.', value: a.peaks, rows: 3, onChange: set( 'peaks' ) } )
+					)
+				),
+				a.src && SSR
+					? el( SSR, { block: 'anchor/audio', attributes: a } )
+					: el( 'div', { className: 'ab-audio-empty' }, 'Choose an audio file or paste its URL in the sidebar.' )
+			);
+		},
+		save: function() { return null; }
+	} );
+
 } )( window.wp.blocks, window.wp.element, window.wp.blockEditor, window.wp.components );
