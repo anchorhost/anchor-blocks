@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.10.0 — 2026-10-23
+
+- New Audio block (`anchor/audio`): a player card in the site's colours with a title, subtitle and title link, a waveform you click or drag to seek (with a time tooltip on hover), and optional section markers that jump to and highlight the part that's playing. A real `<audio>` element does the playing (`preload="none"`, so nothing downloads until play), driven by a small `audio.js` view script that loads only on pages with the block
+- Audio keyboard and screen reader support: the waveform is a slider (arrow keys ±5 s, Page Up/Down ±15 s, Home/End, Space/Enter to play or pause), the play button announces Play/Pause with the title, and only one player plays at a time. Media Session metadata is set on play
+- Audio on narrow cards (container query): fewer, wider bars, and the current section shows under the title instead of the section row. Reduced motion turns off the transitions and the loading spinner
+- Audio fallbacks: email gets a link card (title, subtitle, length and "Listen on the web"), feeds get the native player, and without JS a `<noscript>` native player shows under the card
+- `wp anchor-blocks waveform <file-or-url>` prints the duration and peaks for the block (decodes with ffmpeg, so it works for audio on hosts without CORS headers). In the editor, "Generate waveform" does the same in the browser for media library files. Sections are one per line, `1:17 Drop`
+- New accent tokens (`--ab-accent`, `--ab-accent-hover`, `--ab-on-accent-fill`) read the theme's `--navy` button colours first, with light and dark fallbacks
+- Minn Admin: insert template and labelled fields for the Audio block
+
 ## 1.9.0 — 2026-10-23
 
 - New Canvas block (`anchor/canvas`) for custom coded areas in posts. HTML/SVG, CSS and optional JS live in attributes and render into a declarative shadow root, so the code's styles cannot leak into the page or the page's into it, while inherited tokens (`--ab-*` and the theme's variables) keep it in step with light and dark mode. `:host` is a size container, so layouts can switch with `@container` queries
