@@ -579,6 +579,23 @@ body:not(.wp-admin) .wp-block-anchor-stats-dashboard {
 	color: var(--ab-text);
 }
 
+/* A wide table scrolls inside its card instead of widening the page. */
+.wp-block-anchor-data-table {
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+	.wp-block-anchor-data-table {
+		padding: 1rem;
+	}
+	.wp-block-anchor-data-table .ab-dt-th,
+	.wp-block-anchor-data-table .ab-dt-td {
+		padding-left: 0.6rem;
+		padding-right: 0.6rem;
+	}
+}
+
 .wp-block-anchor-data-table .align-left   { text-align: left; }
 .wp-block-anchor-data-table .align-right  { text-align: right; }
 .wp-block-anchor-data-table .align-center { text-align: center; }
