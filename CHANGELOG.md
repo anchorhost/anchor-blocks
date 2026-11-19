@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.11.1 — 2026-11-19
+
+- Data Table scrolls sideways inside its card when the columns are wider than the screen, instead of widening the whole page on phones. Tighter card and cell padding under 640px
+
 ## 1.11.0 — 2026-10-24
 
 - Canvas "Click to expand" setting (`expand`, off by default). Readers get an expand button in the corner of the canvas, and a click anywhere on it opens the canvas in a modal at the largest size that fits the window. The modal renders a fresh copy from the canvas's untouched markup and runs its JS again, so animations start from the beginning. A small `canvas.js` view script loads only on pages with an expandable canvas
